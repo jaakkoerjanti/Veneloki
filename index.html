@@ -15,15 +15,28 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: linear-gradient(160deg,#0B1E2D,#0F2940,#0B1E2D); min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #E8EFF5; font-size: 16px; }
 input, textarea, button, select { font-family: inherit; font-size: 16px; }
-.header { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(74,144,184,0.2); padding: 14px 16px; display: flex; align-items: center; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
-.header-title { font-size: 20px; font-weight: 700; }
-.header-sub { font-size: 12px; color: #4A90B8; letter-spacing: 1.5px; }
+.header { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(74,144,184,0.2); padding: 12px 16px; display: block; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+.header-title { font-size: 17px; font-weight: 700; }
+.header-edit { font-size: 12px; color: #4A90B8; opacity: 0.7; }
+.header-sub { font-size: 11px; color: #4A90B8; letter-spacing: 1px; }
+.header-topline { display: flex; align-items: flex-start; }
+.header-id { cursor: pointer; }
+.header-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; padding-left: 10px; }
+.fuel-mini { margin-top: 12px; cursor: pointer; }
+.fuel-mini-top { display: flex; align-items: baseline; gap: 6px; }
+.fuel-mini-l { font-size: 30px; font-weight: 800; line-height: 1; }
+.fuel-mini-u { font-size: 14px; font-weight: 700; color: #7A9AB5; }
+.fuel-mini-cap { font-size: 12px; color: #7A9AB5; }
+.fuel-mini-pct { margin-left: auto; font-size: 15px; font-weight: 700; }
+.fuel-mini-bar-bg { background: rgba(255,255,255,0.07); border-radius: 6px; height: 10px; overflow: hidden; margin: 8px 0 6px; }
+.fuel-mini-bar { height: 100%; border-radius: 6px; transition: width .4s; }
+.fuel-mini-sub { font-size: 11px; color: #7A9AB5; }
 .fuel-pill { border-radius: 20px; padding: 7px 14px; display: flex; gap: 8px; align-items: center; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(74,144,184,0.3); }
 .fuel-dot { width: 10px; height: 10px; border-radius: 50%; }
 .fuel-val { font-size: 15px; font-weight: 700; }
 .fuel-pct { font-size: 12px; color: #7A9AB5; }
 .mh-label { font-size: 12px; color: #4A90B8; margin-top: 4px; }
-.boat-img { height: 54px; width: auto; display: block; border-radius: 8px; border: 1px solid rgba(74,144,184,0.35); object-fit: cover; }
+.boat-img { height: 44px; width: auto; display: block; border-radius: 8px; border: 1px solid rgba(74,144,184,0.35); object-fit: cover; }
 .fuel-panel { margin: 10px 14px; background: rgba(74,144,184,0.08); border: 1px solid rgba(74,144,184,0.2); border-radius: 12px; padding: 16px; }
 .tabs { display: flex; margin: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(74,144,184,0.15); overflow: hidden; }
 .tab { flex: 1; padding: 12px 4px; border: none; cursor: pointer; font-size: 14px; background: transparent; color: #7A9AB5; border-right: 1px solid rgba(74,144,184,0.15); }
@@ -124,7 +137,7 @@ input:focus, textarea:focus { border-color: #4A90B8; }
 <div id="app"></div>
 
 <script>
-const TANK = 350;
+let TANK = 350;
 const DEF_CONS = 25;
 
 const HIST = [
@@ -164,13 +177,16 @@ const HIST = [
 ];
 
 // State
-let legs = [], fuelings = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false;
+let legs = [], fuelings = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false, showSettings = false;
+let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
   try { const v = localStorage.getItem("vl5-legs"); if(v) legs = JSON.parse(v); else legs = JSON.parse(JSON.stringify(HIST)); } catch { legs = JSON.parse(JSON.stringify(HIST)); }
   try { const v = localStorage.getItem("vl5-fuel"); if(v) fuel = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-cons"); if(v) cons = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-fuelings"); if(v) fuelings = JSON.parse(v); } catch {}
+  try { const v = localStorage.getItem("vl5-cfg"); if(v) cfg = Object.assign(cfg, JSON.parse(v)); } catch {}
+  TANK = parseNum(cfg.tank) || 350;
 }
 
 function persist() {
@@ -178,9 +194,11 @@ function persist() {
   try { localStorage.setItem("vl5-fuel", String(fuel)); } catch {}
   try { localStorage.setItem("vl5-cons", String(cons)); } catch {}
   try { localStorage.setItem("vl5-fuelings", JSON.stringify(fuelings)); } catch {}
+  try { localStorage.setItem("vl5-cfg", JSON.stringify(cfg)); } catch {}
 }
 
 function parseNum(s) { return parseFloat(String(s||"").replace(",",".").trim()) || 0; }
+function esc(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function getH(s,e) { const h = parseNum(e)-parseNum(s); return h>0?h:0; }
 function legH(l) { return getH(l.mhStart, l.mhEnd); }
 function legF(l) { const rate = l.fuelManual ? parseFloat(l.fuelManual) : cons; return Math.round(legH(l)*rate*10)/10; }
@@ -201,15 +219,77 @@ function render() {
 
   let html = `
   <div class="header">
-    <div>
-      <div class="header-title">Aquador 28C</div>
-      <div class="header-sub">REITTIPÄIVÄKIRJA</div>
+    <div class="header-topline">
+      <div class="header-id" onclick="openSettings()">
+        <div class="header-title">${esc(cfg.title)} <span class="header-edit">✎</span></div>
+        <div class="header-sub">${esc(cfg.subtitle)}</div>
+      </div>
+      <div class="header-right">
+        <img class="boat-img" src="./aquador.png" alt="${esc(cfg.title)}">
+        <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
+      </div>
     </div>
-    <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-      <img class="boat-img" src="./aquador.png" alt="Aquador 28C">
-      <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
+    <div class="fuel-mini" onclick="toggleFuel()">
+      <div class="fuel-mini-top">
+        <span class="fuel-mini-l" style="color:${fc}">${Math.round(fuel)}</span>
+        <span class="fuel-mini-u">L</span>
+        <span class="fuel-mini-cap">/ ${TANK} L</span>
+        <span class="fuel-mini-pct" style="color:${fc}">${Math.round(pct)}%</span>
+      </div>
+      <div class="fuel-mini-bar-bg"><div class="fuel-mini-bar" style="width:${pct}%;background:linear-gradient(90deg,${fc}88,${fc})"></div></div>
+      <div class="fuel-mini-sub">≈ ${(fuel/cons).toFixed(1)} h ajoaikaa · ${Math.round(fuel/cons*25)} nm jäljellä &nbsp;·&nbsp; ⛽ näpäytä: tankkaus</div>
     </div>
   </div>`;
+
+  // Asetuspaneeli (veneen tiedot) headerin alle
+  if(showSettings) {
+    html += `
+    <div class="fuel-panel">
+      <div style="display:flex;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;color:#4A90B8">⚙️ Veneen tiedot</div>
+        <button class="btn-close" style="margin-left:auto" onclick="closeSettings()">✕ Sulje</button>
+      </div>
+      <label>Veneen nimi</label>
+      <input type="text" id="setTitle" value="${esc(cfg.title)}" placeholder="esim. Aquador 28C">
+      <label>Alaotsikko</label>
+      <input type="text" id="setSub" value="${esc(cfg.subtitle)}" placeholder="esim. Reittipäiväkirja">
+      <label>Tankin koko (L)</label>
+      <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="esim. 350">
+      <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">💾 Tallenna</button>
+      <button class="btn-cancel" onclick="closeSettings()">Peruuta</button>
+    </div>`;
+  }
+
+  // Tankkauspaneeli headerin alle
+  if(showFuel) {
+    html += `
+    <div class="fuel-panel">
+      <div style="display:flex;align-items:center;margin-bottom:12px">
+        <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ Kirjaa tankkaus</div>
+        <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ Sulje</button>
+      </div>
+      <label>Päivämäärä</label>
+      <input type="date" id="fkDate" value="${new Date().toISOString().slice(0,10)}">
+      <div class="grid2">
+        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" placeholder="esim. 150"></div>
+        <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${lmh.toFixed(1)}" placeholder="esim. ${lmh.toFixed(1)}"></div>
+      </div>
+      <div class="grid2">
+        <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95"></div>
+        <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50"></div>
+      </div>
+      <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">Täytä litrat ja joko €/L tai yhteensä €.</div>
+      <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 Tallenna tankkaus</button>
+      <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 10px"></div>
+      <div style="font-size:12px;color:#7A9AB5;margin-bottom:8px">Korjaa tankin taso (ei kirjata tankkaukseksi)</div>
+      <div class="flex-row">
+        <input type="text" inputmode="decimal" id="addFuelInp" placeholder="Litraa" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:16px;color-scheme:dark">
+        <button class="btn-set" onclick="setFuelDirect()">📍 Aseta</button>
+        <button class="btn-green" onclick="setFuelFull()">⛽ Täysi</button>
+      </div>
+      <button class="btn-cancel" onclick="toggleFuel()">Peruuta</button>
+    </div>`;
+  }
 
   html += `
   <div class="tabs">
@@ -220,57 +300,6 @@ function render() {
   <div class="content">`;
 
   if(tab==="loki") {
-    // Iso graafinen polttoainemittari + jäljellä oleva ajoaika (kulutuksella ${cons} L/h)
-    const hoursLeft = fuel/cons;
-    const nmLeft = fuel/cons*25;
-    html += `
-    <div class="fuel-hero" onclick="toggleFuel()">
-      <div class="fuel-hero-top">
-        <span class="fuel-hero-l" style="color:${fc}">${Math.round(fuel)}</span>
-        <span class="fuel-hero-unit">L</span>
-        <span class="fuel-hero-cap">/ ${TANK} L</span>
-        <span class="fuel-hero-pct" style="color:${fc}">${Math.round(pct)}%</span>
-      </div>
-      <div class="fuel-hero-bar-bg"><div class="fuel-hero-bar" style="width:${pct}%;background:linear-gradient(90deg,${fc}88,${fc})"></div></div>
-      <div class="fuel-hero-sub">
-        <div class="fuel-hero-metric"><div class="fuel-hero-metric-val" style="color:${fc}">${hoursLeft.toFixed(1)} h</div><div class="fuel-hero-metric-lbl">ajoaikaa (${cons} L/h)</div></div>
-        <div class="fuel-hero-metric"><div class="fuel-hero-metric-val">${Math.round(nmLeft)} nm</div><div class="fuel-hero-metric-lbl">matkaa jäljellä</div></div>
-      </div>
-    </div>`;
-
-    // Tankkaustoiminnot heti mittarin alle
-    if(showFuel) {
-      html += `
-      <div class="fuel-panel">
-        <div style="display:flex;align-items:center;margin-bottom:12px">
-          <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ Kirjaa tankkaus</div>
-          <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ Sulje</button>
-        </div>
-        <label>Päivämäärä</label>
-        <input type="date" id="fkDate" value="${new Date().toISOString().slice(0,10)}">
-        <div class="grid2">
-          <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" placeholder="esim. 150"></div>
-          <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${lmh.toFixed(1)}" placeholder="esim. ${lmh.toFixed(1)}"></div>
-        </div>
-        <div class="grid2">
-          <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95"></div>
-          <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50"></div>
-        </div>
-        <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">Täytä litrat ja joko €/L tai yhteensä €.</div>
-        <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 Tallenna tankkaus</button>
-        <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 10px"></div>
-        <div style="font-size:12px;color:#7A9AB5;margin-bottom:8px">Korjaa tankin taso (ei kirjata tankkaukseksi)</div>
-        <div class="flex-row">
-          <input type="text" inputmode="decimal" id="addFuelInp" placeholder="Litraa" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:16px;color-scheme:dark">
-          <button class="btn-set" onclick="setFuelDirect()">📍 Aseta</button>
-          <button class="btn-green" onclick="setFuelFull()">⛽ Täysi</button>
-        </div>
-        <button class="btn-cancel" onclick="toggleFuel()">Peruuta</button>
-      </div>`;
-    } else {
-      html += `<button class="btn-fuel-action" onclick="toggleFuel()">⛽ Kirjaa tankkaus / korjaa taso</button>`;
-    }
-
     // Yhdistetty aikajana: etapit + tankkaukset, järjestys käyntiajan (mittarilukeman) mukaan, uusin ensin
     const items = [];
     legs.forEach(l => items.push({t:"leg", d:l, k:parseNum(l.mhEnd)}));
@@ -529,7 +558,21 @@ function setTab(t) {
 
 function cancelForm() { editId = null; tab = "loki"; render(); }
 
-function toggleFuel() { showFuel = !showFuel; render(); }
+function toggleFuel() { showFuel = !showFuel; showSettings = false; render(); }
+
+function openSettings() { showSettings = true; showFuel = false; render(); }
+function closeSettings() { showSettings = false; render(); }
+function saveSettings() {
+  const t = document.getElementById("setTitle").value.trim();
+  const s = document.getElementById("setSub").value.trim();
+  const tank = parseNum(document.getElementById("setTank").value);
+  cfg.title = t || cfg.title;
+  cfg.subtitle = s || cfg.subtitle;
+  if(tank > 0) { cfg.tank = tank; TANK = tank; }
+  persist();
+  showSettings = false;
+  render();
+}
 
 function updateFuelingHint() {
   const el = document.getElementById("fkHint"); if(!el) return;
