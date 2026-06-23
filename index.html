@@ -256,6 +256,14 @@ function render() {
       <label>Tankin koko (L)</label>
       <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="esim. 350">
       <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">💾 Tallenna</button>
+      <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 12px"></div>
+      <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">💾 Varmuuskopio</div>
+      <div class="flex-row">
+        <button class="btn-set" style="flex:1" onclick="exportData()">⬇️ Vie tiedot</button>
+        <button class="btn-set" style="flex:1" onclick="document.getElementById('importFile').click()">⬆️ Tuo tiedot</button>
+      </div>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importFileChosen(this)">
+      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">Vie tallentaa kaikki tiedot tiedostoon (talteen tai toiselle laitteelle). Tuo korvaa laitteen nykyiset tiedot tiedoston tiedoilla.</div>
       <button class="btn-cancel" onclick="closeSettings()">Peruuta</button>
     </div>`;
   }
@@ -572,6 +580,51 @@ function saveSettings() {
   persist();
   showSettings = false;
   render();
+}
+
+function exportData() {
+  const data = { app:"Veneloki", v:1, exported:new Date().toISOString(), cfg:cfg, fuel:fuel, cons:cons, legs:legs, fuelings:fuelings };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const name = (cfg.title||"veneloki").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-+|-+$/g,"").toLowerCase() || "veneloki";
+  a.href = url;
+  a.download = name + "-varmuuskopio-" + new Date().toISOString().slice(0,10) + ".json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+}
+
+function importFileChosen(input) {
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if(!data || (!Array.isArray(data.legs) && !Array.isArray(data.fuelings))) {
+        alert("Tämä tiedosto ei näytä olevan Veneloki-varmuuskopio.");
+        input.value = ""; return;
+      }
+      if(!confirm("Tuonti korvaa laitteen nykyiset tiedot tiedoston tiedoilla. Jatketaanko?")) {
+        input.value = ""; return;
+      }
+      if(Array.isArray(data.legs)) legs = data.legs;
+      if(Array.isArray(data.fuelings)) fuelings = data.fuelings;
+      if(typeof data.fuel === "number") fuel = data.fuel;
+      if(typeof data.cons === "number") cons = data.cons;
+      if(data.cfg && typeof data.cfg === "object") { cfg = Object.assign(cfg, data.cfg); TANK = parseNum(cfg.tank) || TANK; }
+      persist();
+      showSettings = false;
+      render();
+      alert("Tiedot tuotu onnistuneesti.");
+    } catch(err) {
+      alert("Tuonti epäonnistui: tiedostoa ei voitu lukea.");
+    }
+    input.value = "";
+  };
+  reader.readAsText(file);
 }
 
 function updateFuelingHint() {
