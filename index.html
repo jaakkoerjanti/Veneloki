@@ -30,7 +30,12 @@ input, textarea, button, select { font-family: inherit; font-size: 16px; }
 .gauge-svg { width: 100%; height: 100%; display: block; }
 .gauge-ef { fill: #7A9AB5; font-size: 11px; font-weight: 700; text-anchor: middle; }
 .gauge-center { position: absolute; inset: 0 0 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-.gauge-l { font-size: 24px; font-weight: 800; line-height: 1; }
+.gauge-l { font-size: 19px; font-weight: 800; line-height: 1; }
+.logfilter { display: flex; gap: 6px; margin-bottom: 12px; }
+.logfilter button { flex: 1; padding: 8px; border-radius: 9px; border: 1px solid rgba(74,144,184,0.25); background: rgba(255,255,255,0.03); color: #7A9AB5; font-size: 13px; font-weight: 700; cursor: pointer; }
+.logfilter button.active { background: rgba(74,144,184,0.18); border-color: rgba(74,144,184,0.5); color: #4A90B8; }
+.checkrow { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; cursor: pointer; font-size: 14px; font-weight: 700; letter-spacing: normal; text-transform: none; color: #E8EFF5; }
+.checkrow input { width: 20px; height: 20px; accent-color: #2ECC71; flex-shrink: 0; }
 .gauge-u { font-size: 9px; color: #7A9AB5; margin-top: 1px; }
 .gauge-pct { font-size: 12px; font-weight: 700; margin-top: 2px; }
 .gauge-metrics { font-size: 11px; color: #7A9AB5; margin-top: 2px; text-align: center; }
@@ -180,7 +185,7 @@ const HIST = [
 ];
 
 // State
-let legs = [], fuelings = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false, showSettings = false;
+let legs = [], fuelings = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false, showSettings = false, logFilter = "all";
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
@@ -310,22 +315,17 @@ function render() {
       <label>Päivämäärä</label>
       <input type="date" id="fkDate" value="${new Date().toISOString().slice(0,10)}">
       <div class="grid2">
-        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" placeholder="esim. 150"></div>
+        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" value="${fuel<TANK?Math.round(TANK-fuel):''}" placeholder="esim. 150"></div>
         <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${lmh.toFixed(1)}" placeholder="esim. ${lmh.toFixed(1)}"></div>
       </div>
       <div class="grid2">
         <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95"></div>
         <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50"></div>
       </div>
+      <label class="checkrow"><input type="checkbox" id="fkFull" checked onchange="fullToggle()"><span>Tankki täyteen (${TANK} L)</span></label>
+      <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">Tankki asetetaan täyteen. Litrat = arvioitu täyttömäärä — muuta pumpun lukemaan jos tiedät sen. Mittarilukema pakollinen.</div>
       <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">Täytä litrat ja joko €/L tai yhteensä €.</div>
       <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 Tallenna tankkaus</button>
-      <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 10px"></div>
-      <div style="font-size:12px;color:#7A9AB5;margin-bottom:8px">Korjaa tankin taso (ei kirjata tankkaukseksi)</div>
-      <div class="flex-row">
-        <input type="text" inputmode="decimal" id="addFuelInp" placeholder="Litraa" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:16px;color-scheme:dark">
-        <button class="btn-set" onclick="setFuelDirect()">📍 Aseta</button>
-        <button class="btn-green" onclick="setFuelFull()">⛽ Täysi</button>
-      </div>
       <button class="btn-cancel" onclick="toggleFuel()">Peruuta</button>
     </div>`;
   }
@@ -339,16 +339,27 @@ function render() {
   <div class="content">`;
 
   if(tab==="loki") {
+    // Suodatin: kaikki / etapit / tankkaukset
+    html += `<div class="logfilter">
+      <button class="${logFilter==='all'?'active':''}" onclick="setFilter('all')">Kaikki</button>
+      <button class="${logFilter==='legs'?'active':''}" onclick="setFilter('legs')">Etapit</button>
+      <button class="${logFilter==='fuel'?'active':''}" onclick="setFilter('fuel')">⛽ Tankkaukset</button>
+    </div>`;
+
     // Yhdistetty aikajana: etapit + tankkaukset, järjestys käyntiajan (mittarilukeman) mukaan, uusin ensin
     const items = [];
     legs.forEach(l => items.push({t:"leg", d:l, k:parseNum(l.mhEnd)}));
     fuelings.forEach(f => items.push({t:"fuel", d:f, k:(f.mh?parseNum(f.mh):lmh)+0.001}));
     items.sort((a,b)=> b.k - a.k);
+    const shown = logFilter==="legs" ? items.filter(it=>it.t==="leg")
+                : logFilter==="fuel" ? items.filter(it=>it.t==="fuel")
+                : items;
 
-    if(items.length===0) {
-      html += `<div class="empty"><div class="empty-icon">⚓</div><div>Ei merkintöjä vielä</div></div>`;
+    if(shown.length===0) {
+      const msg = logFilter==="fuel" ? "Ei tankkauksia vielä" : logFilter==="legs" ? "Ei etappeja vielä" : "Ei merkintöjä vielä";
+      html += `<div class="empty"><div class="empty-icon">⚓</div><div>${msg}</div></div>`;
     } else {
-      items.forEach(it => {
+      shown.forEach(it => {
         if(it.t==="leg") {
           const leg=it.d, h=legH(leg), f=legF(leg), n=legN(leg);
           html += `
@@ -381,7 +392,7 @@ function render() {
               </span>
             </div>
             <div class="leg-meta">
-              <span>🛢 <b>${(f.liters||0).toFixed(1)} L</b></span>
+              <span>🛢 <b>${(f.liters||0).toFixed(1)} L</b>${f.full?' <span style="opacity:.6">(täysi)</span>':''}</span>
               ${f.mh?`<span>⚙ <b>${f.mh} h</b></span>`:''}
               ${f.ppl?`<span><b>${f.ppl.toFixed(3)} €/L</b></span>`:''}
               ${f.total?`<span>💶 <b>${f.total.toFixed(2)} €</b></span>`:''}
@@ -595,6 +606,8 @@ function setTab(t) {
   render();
 }
 
+function setFilter(f) { logFilter = f; render(); }
+
 function cancelForm() { editId = null; tab = "loki"; render(); }
 
 function toggleFuel() { showFuel = !showFuel; showSettings = false; render(); }
@@ -696,19 +709,34 @@ function updateFuelingHint() {
   else el.textContent = "Täytä litrat ja joko €/L tai yhteensä €.";
 }
 
+function fullToggle() {
+  const full = document.getElementById("fkFull").checked;
+  const L = document.getElementById("fkL");
+  const hint = document.getElementById("fkFullHint");
+  if(full) {
+    L.value = (fuel < TANK ? Math.round(TANK-fuel) : "");
+    hint.textContent = "Tankki asetetaan täyteen. Litrat = arvioitu täyttömäärä — muuta pumpun lukemaan jos tiedät sen. Mittarilukema pakollinen.";
+  } else {
+    L.value = "";
+    hint.textContent = "Lisätankkaus: syötä tankatut litrat, ne lisätään tankin nykyiseen tasoon.";
+  }
+}
+
 function logFueling() {
   const date = document.getElementById("fkDate").value;
   const L = parseNum(document.getElementById("fkL").value);
   let mh = parseNum(document.getElementById("fkMh").value);
   let ppl = parseNum(document.getElementById("fkPpl").value);
   let tot = parseNum(document.getElementById("fkTot").value);
+  const full = document.getElementById("fkFull").checked;
   const hint = document.getElementById("fkHint");
   if(L<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent="❌ Anna tankatut litrat."; } return; }
+  if(full && mh<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent="❌ Täysi tankki vaatii mittarilukeman."; } return; }
+  if(mh<=0) mh = latestMh();
   if(tot<=0 && ppl>0) tot = L*ppl;
   if(ppl<=0 && tot>0) ppl = tot/L;
-  if(mh<=0) mh = latestMh();
-  fuelings.push({id:"f"+Date.now(), date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0});
-  fuel = Math.min(TANK, fuel+L);
+  fuelings.push({id:"f"+Date.now(), date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0, full:full});
+  fuel = full ? TANK : Math.min(TANK, fuel+L);
   persist();
   showFuel = false;
   render();
