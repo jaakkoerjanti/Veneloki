@@ -31,6 +31,19 @@ input, textarea, button, select { font-family: inherit; font-size: 16px; }
 .fuel-mini-bar-bg { background: rgba(255,255,255,0.07); border-radius: 6px; height: 10px; overflow: hidden; margin: 8px 0 6px; }
 .fuel-mini-bar { height: 100%; border-radius: 6px; transition: width .4s; }
 .fuel-mini-sub { font-size: 11px; color: #7A9AB5; }
+.gauge-wrap { display: flex; align-items: center; gap: 14px; margin-top: 12px; cursor: pointer; }
+.gauge { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.gauge-svg { width: 120px; height: 120px; display: block; }
+.gauge-ef { fill: #7A9AB5; font-size: 11px; font-weight: 700; text-anchor: middle; }
+.gauge-center { position: absolute; inset: 0 0 14px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.gauge-l { font-size: 30px; font-weight: 800; line-height: 1; }
+.gauge-u { font-size: 11px; color: #7A9AB5; margin-top: 2px; }
+.gauge-pct { font-size: 14px; font-weight: 700; margin-top: 3px; }
+.gauge-side { flex: 1; min-width: 0; }
+.gauge-side .gs { margin-bottom: 8px; }
+.gauge-side b { font-size: 18px; font-weight: 800; display: block; line-height: 1.1; }
+.gauge-side span { font-size: 11px; color: #7A9AB5; }
+.gauge-hint { font-size: 11px; color: #4A90B8; opacity: 0.85; }
 .fuel-pill { border-radius: 20px; padding: 7px 14px; display: flex; gap: 8px; align-items: center; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(74,144,184,0.3); }
 .fuel-dot { width: 10px; height: 10px; border-radius: 50%; }
 .fuel-val { font-size: 15px; font-weight: 700; }
@@ -205,6 +218,21 @@ function legF(l) { const rate = l.fuelManual ? parseFloat(l.fuelManual) : cons; 
 function legN(l) { return l.nm ? parseFloat(l.nm) : Math.round(legH(l)*25*10)/10; }
 function dur(h) { const hh=Math.floor(h), mm=Math.round((h-hh)*60); if(hh===0)return mm+"min"; if(mm===0)return hh+"h"; return hh+"h "+mm+"min"; }
 function fuelColor(pct) { return pct>50?"#2ECC71":pct>25?"#F39C12":"#E74C3C"; }
+function fuelGaugeSVG(pct, fc) {
+  const cx=60, cy=60, r=46, sw=11, A0=135, SWEEP=270;
+  const p = Math.max(0, Math.min(100, pct));
+  function pol(a){ const rad=a*Math.PI/180; return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)]; }
+  function arc(a0,a1){ const [x0,y0]=pol(a0),[x1,y1]=pol(a1); const d=((a1-a0)%360+360)%360; const large=d>180?1:0; return "M"+x0.toFixed(2)+" "+y0.toFixed(2)+" A"+r+" "+r+" 0 "+large+" 1 "+x1.toFixed(2)+" "+y1.toFixed(2); }
+  const valEnd = A0 + SWEEP*p/100;
+  const track = arc(A0, A0+SWEEP-0.01);
+  const val = p>0.5 ? `<path d="${arc(A0, valEnd)}" fill="none" stroke="${fc}" stroke-width="${sw}" stroke-linecap="round"/>` : "";
+  return `<svg viewBox="0 0 120 120" class="gauge-svg">
+    <path d="${track}" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="${sw}" stroke-linecap="round"/>
+    ${val}
+    <text x="16" y="110" class="gauge-ef">E</text>
+    <text x="104" y="110" class="gauge-ef">F</text>
+  </svg>`;
+}
 function latestMh() { return legs.reduce((s,l)=>Math.max(s,parseNum(l.mhEnd)),0); }
 function totalH() { return legs.reduce((s,l)=>s+legH(l),0); }
 function totalNm() { return legs.reduce((s,l)=>s+legN(l),0); }
@@ -229,15 +257,20 @@ function render() {
         <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
       </div>
     </div>
-    <div class="fuel-mini" onclick="toggleFuel()">
-      <div class="fuel-mini-top">
-        <span class="fuel-mini-l" style="color:${fc}">${Math.round(fuel)}</span>
-        <span class="fuel-mini-u">L</span>
-        <span class="fuel-mini-cap">/ ${TANK} L</span>
-        <span class="fuel-mini-pct" style="color:${fc}">${Math.round(pct)}%</span>
+    <div class="gauge-wrap" onclick="toggleFuel()">
+      <div class="gauge">
+        ${fuelGaugeSVG(pct, fc)}
+        <div class="gauge-center">
+          <div class="gauge-l" style="color:${fc}">${Math.round(fuel)}</div>
+          <div class="gauge-u">L / ${TANK}</div>
+          <div class="gauge-pct" style="color:${fc}">${Math.round(pct)} %</div>
+        </div>
       </div>
-      <div class="fuel-mini-bar-bg"><div class="fuel-mini-bar" style="width:${pct}%;background:linear-gradient(90deg,${fc}88,${fc})"></div></div>
-      <div class="fuel-mini-sub">≈ ${(fuel/cons).toFixed(1)} h ajoaikaa · ${Math.round(fuel/cons*25)} nm jäljellä &nbsp;·&nbsp; ⛽ näpäytä: tankkaus</div>
+      <div class="gauge-side">
+        <div class="gs"><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b><span>ajoaikaa (${cons} L/h)</span></div>
+        <div class="gs"><b>${Math.round(fuel/cons*25)} nm</b><span>matkaa jäljellä</span></div>
+        <div class="gauge-hint">⛽ näpäytä: tankkaus / korjaa taso</div>
+      </div>
     </div>
   </div>`;
 
