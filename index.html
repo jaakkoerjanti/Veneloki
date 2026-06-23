@@ -315,12 +315,12 @@ function render() {
       <label>Päivämäärä</label>
       <input type="date" id="fkDate" value="${new Date().toISOString().slice(0,10)}">
       <div class="grid2">
-        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" value="${fuel<TANK?Math.round(TANK-fuel):''}" placeholder="esim. 150"></div>
+        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" value="${fuel<TANK?Math.round(TANK-fuel):''}" placeholder="esim. 150" oninput="calcFuelPrice('l')"></div>
         <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${lmh.toFixed(1)}" placeholder="esim. ${lmh.toFixed(1)}"></div>
       </div>
       <div class="grid2">
-        <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95"></div>
-        <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50"></div>
+        <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95" oninput="calcFuelPrice('ppl')"></div>
+        <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50" oninput="calcFuelPrice('tot')"></div>
       </div>
       <label class="checkrow"><input type="checkbox" id="fkFull" checked onchange="fullToggle()"><span>Tankki täyteen (${TANK} L)</span></label>
       <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">Tankki asetetaan täyteen. Litrat = arvioitu täyttömäärä — muuta pumpun lukemaan jos tiedät sen. Mittarilukema pakollinen.</div>
@@ -499,27 +499,30 @@ function render() {
     }
     html += `</div>`;
 
-    // Kulutus tankkausväleistä (litrat ÷ käyntiaika fillien välillä, mittarilukemien perusteella)
-    const fv = fuelings.filter(f=>f.mh>0).sort((a,b)=>a.mh-b.mh);
+    // Kulutus täydeltä täydelle: vain "tankki täyteen" -tankkaukset ovat luotettavia kalibrointipisteitä.
+    // Välillä = kaikki tankatut litrat (myös lisätankkaukset) kahden täyden tankin välillä ÷ käyntiaika.
+    const fulls = fuelings.filter(f=>f.full && f.mh>0).sort((a,b)=>a.mh-b.mh);
+    const allf = fuelings.filter(f=>f.mh>0).sort((a,b)=>a.mh-b.mh);
+    const burnedBetween = (loMh, hiMh) => allf.filter(f=>f.mh>loMh && f.mh<=hiMh).reduce((s,f)=>s+(f.liters||0),0);
     let lastCons=0, lastBurn=0, lastHrs=0, allCons=0, allBurn=0, allHrs=0;
-    if(fv.length>=2) {
-      const a=fv[fv.length-2], b=fv[fv.length-1];
-      lastHrs = b.mh - a.mh; lastBurn = b.liters||0;
+    if(fulls.length>=2) {
+      const a=fulls[fulls.length-2], b=fulls[fulls.length-1];
+      lastHrs = b.mh - a.mh; lastBurn = burnedBetween(a.mh, b.mh);
       if(lastHrs>0) lastCons = lastBurn/lastHrs;
-      allHrs = fv[fv.length-1].mh - fv[0].mh;
-      allBurn = fv.slice(1).reduce((s,f)=>s+(f.liters||0),0);
+      const f0=fulls[0], fn=fulls[fulls.length-1];
+      allHrs = fn.mh - f0.mh; allBurn = burnedBetween(f0.mh, fn.mh);
       if(allHrs>0) allCons = allBurn/allHrs;
     }
     html += `
     <div class="card">
       <div class="section-title">Kulutus tankkausväleistä</div>`;
-    if(fv.length<2) {
-      html += `<div style="font-size:13px;color:#7A9AB5">Tarvitaan vähintään 2 tankkausta mittarilukemineen. Kulutus lasketaan tankattujen litrojen ja mittarilukemien erotuksesta.</div>`;
+    if(fulls.length<2) {
+      html += `<div style="font-size:13px;color:#7A9AB5">Tarvitaan vähintään 2 <b>täyteen</b>-tankkausta mittarilukemineen. Kulutus lasketaan täyteen-tankkausten väliltä: tankatut litrat ÷ käyntiajan erotus.</div>`;
     } else {
       html += `
       <div class="kv-row"><span class="kv-lbl">Viim. tankkausväli<br><span style="font-size:11px;opacity:.7">${lastBurn.toFixed(0)} L ÷ ${lastHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${lastCons>0?lastCons.toFixed(1)+" L/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kaikki tankkaukset<br><span style="font-size:11px;opacity:.7">${allBurn.toFixed(0)} L ÷ ${allHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${allCons>0?allCons.toFixed(1)+" L/h":"–"}</span></div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Lasketaan tankattujen litrojen ja mittarilukemien erotuksesta. Tarkin, kun tankki täytetään täyteen joka tankkauksella.</div>`;
+      <div class="kv-row"><span class="kv-lbl">Kaikki täydet välit<br><span style="font-size:11px;opacity:.7">${allBurn.toFixed(0)} L ÷ ${allHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${allCons>0?allCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Lasketaan täydeltä täydelle (vain täyteen-tankkaukset). Tämä on tarkin todellinen kulutus.</div>`;
     }
     html += `</div>`;
 
@@ -707,6 +710,19 @@ function updateFuelingHint() {
   else if(L>0 && tot>0 && ppl<=0) el.textContent = `≈ ${(tot/L).toFixed(3)} €/L`;
   else if(L>0 && ppl>0 && tot>0) el.textContent = `${L} L × ${ppl} €/L = ${(L*ppl).toFixed(2)} €`;
   else el.textContent = "Täytä litrat ja joko €/L tai yhteensä €.";
+}
+
+function calcFuelPrice(src) {
+  const Lel = document.getElementById("fkL"), pEl = document.getElementById("fkPpl"), tEl = document.getElementById("fkTot");
+  if(!Lel || !pEl || !tEl) return;
+  const L = parseNum(Lel.value), ppl = parseNum(pEl.value), tot = parseNum(tEl.value);
+  if(L<=0) return;
+  if(src==="ppl") { if(ppl>0) tEl.value = (L*ppl).toFixed(2); }
+  else if(src==="tot") { if(tot>0) pEl.value = (tot/L).toFixed(3); }
+  else { // litramäärä muuttui: päivitä riippuva arvo (€/L etusijalla)
+    if(ppl>0) tEl.value = (L*ppl).toFixed(2);
+    else if(tot>0) pEl.value = (tot/L).toFixed(3);
+  }
 }
 
 function fullToggle() {
