@@ -1,7 +1,7 @@
 // Veneloki – service worker
 // Tallentaa sovelluksen tiedostot laitteelle, jotta se toimii ilman nettiä.
 // Nosta versionumeroa aina kun päivität sovellusta, niin vanha välimuisti vaihtuu.
-const CACHE = "veneloki-v13";
+const CACHE = "veneloki-v15";
 
 const ASSETS = [
   "./",

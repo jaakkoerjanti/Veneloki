@@ -15,41 +15,31 @@
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: linear-gradient(160deg,#0B1E2D,#0F2940,#0B1E2D); min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #E8EFF5; font-size: 16px; }
 input, textarea, button, select { font-family: inherit; font-size: 16px; }
-.header { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(74,144,184,0.2); padding: 12px 16px; display: block; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
-.header-title { font-size: 17px; font-weight: 700; }
-.header-edit { font-size: 12px; color: #4A90B8; opacity: 0.7; }
-.header-sub { font-size: 11px; color: #4A90B8; letter-spacing: 1px; }
-.header-topline { display: flex; align-items: flex-start; }
+.header { background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(74,144,184,0.2); padding: 10px 12px; display: block; position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); }
+.header-title { font-size: 15px; font-weight: 700; line-height: 1.15; }
+.header-edit { font-size: 11px; color: #4A90B8; opacity: 0.7; }
+.header-sub { font-size: 10px; color: #4A90B8; letter-spacing: 0.5px; margin-top: 2px; }
+.header-row { display: flex; align-items: flex-start; gap: 8px; }
+.header-left { flex: 0 1 auto; max-width: 40%; display: flex; flex-direction: column; gap: 9px; }
 .header-id { cursor: pointer; }
-.header-right { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; padding-left: 10px; }
-.fuel-mini { margin-top: 12px; cursor: pointer; }
-.fuel-mini-top { display: flex; align-items: baseline; gap: 6px; }
-.fuel-mini-l { font-size: 30px; font-weight: 800; line-height: 1; }
-.fuel-mini-u { font-size: 14px; font-weight: 700; color: #7A9AB5; }
-.fuel-mini-cap { font-size: 12px; color: #7A9AB5; }
-.fuel-mini-pct { margin-left: auto; font-size: 15px; font-weight: 700; }
-.fuel-mini-bar-bg { background: rgba(255,255,255,0.07); border-radius: 6px; height: 10px; overflow: hidden; margin: 8px 0 6px; }
-.fuel-mini-bar { height: 100%; border-radius: 6px; transition: width .4s; }
-.fuel-mini-sub { font-size: 11px; color: #7A9AB5; }
-.gauge-wrap { display: flex; align-items: center; gap: 14px; margin-top: 12px; cursor: pointer; }
-.gauge { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
-.gauge-svg { width: 120px; height: 120px; display: block; }
+.header-metrics { cursor: pointer; font-size: 11px; color: #7A9AB5; line-height: 1.6; }
+.header-metrics b { font-size: 14px; font-weight: 800; color: #E8EFF5; }
+.header-right { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.header-gauge { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; cursor: pointer; }
+.gauge { position: relative; width: 104px; height: 104px; flex-shrink: 0; }
+.gauge-svg { width: 100%; height: 100%; display: block; }
 .gauge-ef { fill: #7A9AB5; font-size: 11px; font-weight: 700; text-anchor: middle; }
-.gauge-center { position: absolute; inset: 0 0 14px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
-.gauge-l { font-size: 30px; font-weight: 800; line-height: 1; }
-.gauge-u { font-size: 11px; color: #7A9AB5; margin-top: 2px; }
-.gauge-pct { font-size: 14px; font-weight: 700; margin-top: 3px; }
-.gauge-side { flex: 1; min-width: 0; }
-.gauge-side .gs { margin-bottom: 8px; }
-.gauge-side b { font-size: 18px; font-weight: 800; display: block; line-height: 1.1; }
-.gauge-side span { font-size: 11px; color: #7A9AB5; }
-.gauge-hint { font-size: 11px; color: #4A90B8; opacity: 0.85; }
+.gauge-center { position: absolute; inset: 0 0 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.gauge-l { font-size: 24px; font-weight: 800; line-height: 1; }
+.gauge-u { font-size: 9px; color: #7A9AB5; margin-top: 1px; }
+.gauge-pct { font-size: 12px; font-weight: 700; margin-top: 2px; }
+.gauge-metrics { font-size: 11px; color: #7A9AB5; margin-top: 2px; text-align: center; }
 .fuel-pill { border-radius: 20px; padding: 7px 14px; display: flex; gap: 8px; align-items: center; cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(74,144,184,0.3); }
 .fuel-dot { width: 10px; height: 10px; border-radius: 50%; }
 .fuel-val { font-size: 15px; font-weight: 700; }
 .fuel-pct { font-size: 12px; color: #7A9AB5; }
 .mh-label { font-size: 12px; color: #4A90B8; margin-top: 4px; }
-.boat-img { height: 44px; width: auto; display: block; border-radius: 8px; border: 1px solid rgba(74,144,184,0.35); object-fit: cover; }
+.boat-img { height: 40px; width: auto; display: block; border-radius: 7px; border: 1px solid rgba(74,144,184,0.35); object-fit: cover; }
 .fuel-panel { margin: 10px 14px; background: rgba(74,144,184,0.08); border: 1px solid rgba(74,144,184,0.2); border-radius: 12px; padding: 16px; }
 .tabs { display: flex; margin: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(74,144,184,0.15); overflow: hidden; }
 .tab { flex: 1; padding: 12px 4px; border: none; cursor: pointer; font-size: 14px; background: transparent; color: #7A9AB5; border-right: 1px solid rgba(74,144,184,0.15); }
@@ -247,29 +237,30 @@ function render() {
 
   let html = `
   <div class="header">
-    <div class="header-topline">
-      <div class="header-id" onclick="openSettings()">
-        <div class="header-title">${esc(cfg.title)} <span class="header-edit">✎</span></div>
-        <div class="header-sub">${esc(cfg.subtitle)}</div>
+    <div class="header-row">
+      <div class="header-left">
+        <div class="header-id" onclick="openSettings()">
+          <div class="header-title">${esc(cfg.title)} <span class="header-edit">✎</span></div>
+          <div class="header-sub">${esc(cfg.subtitle)}</div>
+        </div>
+        <div class="header-metrics" onclick="toggleFuel()">
+          <div><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b> ajoaikaa</div>
+          <div><b>${Math.round(fuel/cons*25)} nm</b> jäljellä</div>
+        </div>
+      </div>
+      <div class="header-gauge" onclick="toggleFuel()">
+        <div class="gauge">
+          ${fuelGaugeSVG(pct, fc)}
+          <div class="gauge-center">
+            <div class="gauge-l" style="color:${fc}">${Math.round(fuel)}</div>
+            <div class="gauge-u">L / ${TANK}</div>
+            <div class="gauge-pct" style="color:${fc}">${Math.round(pct)} %</div>
+          </div>
+        </div>
       </div>
       <div class="header-right">
         <img class="boat-img" src="./aquador.png" alt="${esc(cfg.title)}">
         <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
-      </div>
-    </div>
-    <div class="gauge-wrap" onclick="toggleFuel()">
-      <div class="gauge">
-        ${fuelGaugeSVG(pct, fc)}
-        <div class="gauge-center">
-          <div class="gauge-l" style="color:${fc}">${Math.round(fuel)}</div>
-          <div class="gauge-u">L / ${TANK}</div>
-          <div class="gauge-pct" style="color:${fc}">${Math.round(pct)} %</div>
-        </div>
-      </div>
-      <div class="gauge-side">
-        <div class="gs"><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b><span>ajoaikaa (${cons} L/h)</span></div>
-        <div class="gs"><b>${Math.round(fuel/cons*25)} nm</b><span>matkaa jäljellä</span></div>
-        <div class="gauge-hint">⛽ näpäytä: tankkaus / korjaa taso</div>
       </div>
     </div>
   </div>`;
