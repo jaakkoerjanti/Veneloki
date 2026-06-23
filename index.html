@@ -259,7 +259,7 @@ function render() {
         </div>
       </div>
       <div class="header-right">
-        <img class="boat-img" src="./aquador.png" alt="${esc(cfg.title)}">
+        <img class="boat-img" src="${cfg.photo || './aquador.png'}" alt="${esc(cfg.title)}">
         <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
       </div>
     </div>
@@ -279,6 +279,13 @@ function render() {
       <input type="text" id="setSub" value="${esc(cfg.subtitle)}" placeholder="esim. Reittipäiväkirja">
       <label>Tankin koko (L)</label>
       <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="esim. 350">
+      <label>Veneen kuva</label>
+      <div class="flex-row">
+        <button class="btn-set" style="flex:1" onclick="document.getElementById('photoFile').click()">📷 Vaihda kuva</button>
+        <button class="btn-set" style="flex:1" onclick="clearPhoto()">↩︎ Oletus</button>
+      </div>
+      <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="photoChosen(this)">
+      <div style="font-size:11px;color:#7A9AB5;margin-top:6px">${cfg.photo ? "Oma kuva käytössä (vaihtuu heti valittaessa)." : "Käytössä oletuskuva."}</div>
       <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">💾 Tallenna</button>
       <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 12px"></div>
       <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">💾 Varmuuskopio</div>
@@ -604,6 +611,32 @@ function saveSettings() {
   persist();
   showSettings = false;
   render();
+}
+
+function clearPhoto() { cfg.photo = ""; persist(); render(); }
+function photoChosen(input) {
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    const img = new Image();
+    img.onload = function() {
+      const maxW = 520;
+      const scale = Math.min(1, maxW / img.width);
+      const w = Math.round(img.width*scale), h = Math.round(img.height*scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+      try {
+        cfg.photo = canvas.toDataURL("image/jpeg", 0.82);
+        persist();
+        render();
+      } catch(err) { alert("Kuvan käsittely epäonnistui."); }
+    };
+    img.onerror = function() { alert("Kuvaa ei voitu lukea."); };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
 }
 
 function exportData() {
