@@ -104,6 +104,19 @@ input:focus, textarea:focus { border-color: #4A90B8; }
 .leg-meta { display: flex; flex-wrap: wrap; gap: 3px 14px; margin-top: 6px; font-size: 12.5px; color: #7A9AB5; }
 .leg-meta b { color: #E8EFF5; font-weight: 700; }
 .leg-note2 { margin-top: 6px; font-size: 12px; color: #7A9AB5; font-style: italic; }
+/* Tankkausloki */
+.fuelrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(74,144,184,0.1); }
+.fuelrow:last-child { border-bottom: none; }
+.fuelrow-date { font-size: 14px; font-weight: 700; }
+.fuelrow-sub { font-size: 12px; color: #7A9AB5; margin-top: 2px; }
+.fuelrow-l { font-size: 15px; font-weight: 700; color: #4A90B8; }
+.fuelrow-tot { font-size: 12px; color: #7A9AB5; margin-top: 2px; }
+.fuelrow .btn-del { font-size: 16px; padding: 4px 6px; }
+.btn-close { background: rgba(255,255,255,0.06); border: 1px solid rgba(74,144,184,0.3); border-radius: 8px; padding: 7px 12px; color: #7A9AB5; font-size: 13px; font-weight: 700; cursor: pointer; }
+.btn-cancel { width: 100%; padding: 14px; background: transparent; border: 1px solid rgba(74,144,184,0.3); border-radius: 10px; color: #7A9AB5; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+.btn-fuel-action { width: 100%; padding: 13px; margin-bottom: 14px; background: rgba(74,144,184,0.12); border: 1px solid rgba(74,144,184,0.35); border-radius: 12px; color: #4A90B8; font-size: 15px; font-weight: 700; cursor: pointer; }
+.fuelcard { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.08); }
+.fuelcard .leg-route2 { color: #2ECC71; }
 </style>
 </head>
 <body>
@@ -151,18 +164,20 @@ const HIST = [
 ];
 
 // State
-let legs = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false;
+let legs = [], fuelings = [], fuel = 100, cons = DEF_CONS, tab = "loki", editId = null, showFuel = false;
 
 function load() {
   try { const v = localStorage.getItem("vl5-legs"); if(v) legs = JSON.parse(v); else legs = JSON.parse(JSON.stringify(HIST)); } catch { legs = JSON.parse(JSON.stringify(HIST)); }
   try { const v = localStorage.getItem("vl5-fuel"); if(v) fuel = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-cons"); if(v) cons = parseFloat(v); } catch {}
+  try { const v = localStorage.getItem("vl5-fuelings"); if(v) fuelings = JSON.parse(v); } catch {}
 }
 
 function persist() {
   try { localStorage.setItem("vl5-legs", JSON.stringify(legs)); } catch {}
   try { localStorage.setItem("vl5-fuel", String(fuel)); } catch {}
   try { localStorage.setItem("vl5-cons", String(cons)); } catch {}
+  try { localStorage.setItem("vl5-fuelings", JSON.stringify(fuelings)); } catch {}
 }
 
 function parseNum(s) { return parseFloat(String(s||"").replace(",",".").trim()) || 0; }
@@ -177,6 +192,7 @@ function totalH() { return legs.reduce((s,l)=>s+legH(l),0); }
 function totalNm() { return legs.reduce((s,l)=>s+legN(l),0); }
 function fuelPct() { return Math.min(100,Math.max(0,fuel/TANK*100)); }
 function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
+function itemKey(date, sub) { const t = Date.parse((date||"")+"T00:00:00"); return (isNaN(t)?0:t) + (sub||0); }
 
 function render() {
   const pct = fuelPct();
@@ -194,21 +210,6 @@ function render() {
       <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
     </div>
   </div>`;
-
-  if(showFuel) {
-    html += `
-    <div class="fuel-panel">
-      <div style="font-size:13px;color:#7A9AB5;margin-bottom:10px">Tankkaus / korjaus</div>
-      <div class="flex-row" style="margin-bottom:8px">
-        <input type="number" id="addFuelInp" placeholder="Litraa lisää" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:16px;color-scheme:dark">
-        <button class="btn-blue" onclick="addFuelClick()">+ Lisää</button>
-      </div>
-      <div class="flex-row">
-        <button class="btn-green" onclick="setFuelFull()">⛽ Täysi (350L)</button>
-        <button class="btn-set" onclick="setFuelDirect()">📍 Aseta ?L</button>
-      </div>
-    </div>`;
-  }
 
   html += `
   <div class="tabs">
@@ -235,32 +236,89 @@ function render() {
         <div class="fuel-hero-metric"><div class="fuel-hero-metric-val" style="color:${fc}">${hoursLeft.toFixed(1)} h</div><div class="fuel-hero-metric-lbl">ajoaikaa (${cons} L/h)</div></div>
         <div class="fuel-hero-metric"><div class="fuel-hero-metric-val">${Math.round(nmLeft)} nm</div><div class="fuel-hero-metric-lbl">matkaa jäljellä</div></div>
       </div>
-      <div class="fuel-hero-hint">⛽ Näpäytä tästä: tankkaus / korjaus</div>
     </div>`;
 
-    if(legs.length===0) {
-      html += `<div class="empty"><div class="empty-icon">⚓</div><div>Ei etappeja vielä</div></div>`;
+    // Tankkaustoiminnot heti mittarin alle
+    if(showFuel) {
+      html += `
+      <div class="fuel-panel">
+        <div style="display:flex;align-items:center;margin-bottom:12px">
+          <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ Kirjaa tankkaus</div>
+          <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ Sulje</button>
+        </div>
+        <label>Päivämäärä</label>
+        <input type="date" id="fkDate" value="${new Date().toISOString().slice(0,10)}">
+        <div class="grid2">
+          <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" placeholder="esim. 150"></div>
+          <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${lmh.toFixed(1)}" placeholder="esim. ${lmh.toFixed(1)}"></div>
+        </div>
+        <div class="grid2">
+          <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" placeholder="esim. 1.95"></div>
+          <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" placeholder="esim. 292.50"></div>
+        </div>
+        <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">Täytä litrat ja joko €/L tai yhteensä €.</div>
+        <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 Tallenna tankkaus</button>
+        <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 10px"></div>
+        <div style="font-size:12px;color:#7A9AB5;margin-bottom:8px">Korjaa tankin taso (ei kirjata tankkaukseksi)</div>
+        <div class="flex-row">
+          <input type="text" inputmode="decimal" id="addFuelInp" placeholder="Litraa" style="flex:1;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:16px;color-scheme:dark">
+          <button class="btn-set" onclick="setFuelDirect()">📍 Aseta</button>
+          <button class="btn-green" onclick="setFuelFull()">⛽ Täysi</button>
+        </div>
+      </div>`;
     } else {
-      [...legs].reverse().forEach(leg => {
-        const h=legH(leg), f=legF(leg), n=legN(leg);
-        html += `
-        <div class="leg">
-          <div class="leg-head">
-            <span class="leg-route2">${leg.from} → ${leg.to}</span>
-            <span class="leg-d">${leg.date}</span>
-            <span class="leg-acts">
-              <button class="btn-edit" onclick="editLeg('${leg.id}')">✏️</button>
-              <button class="btn-del" onclick="deleteLeg('${leg.id}')">✕</button>
-            </span>
-          </div>
-          <div class="leg-meta">
-            <span>⏱ <b>${dur(h)}</b></span>
-            <span>⛽ <b>${f} L</b></span>
-            <span>🧭 <b>${n} nm</b>${leg.nm?'':' <span style="opacity:.6">(arvio)</span>'}</span>
-            <span>⚙ <b>${leg.mhStart}–${leg.mhEnd}</b></span>
-          </div>
-          ${leg.notes?`<div class="leg-note2">${leg.notes}</div>`:''}
-        </div>`;
+      html += `<button class="btn-fuel-action" onclick="toggleFuel()">⛽ Kirjaa tankkaus / korjaa taso</button>`;
+    }
+
+    // Yhdistetty aikajana: etapit + tankkaukset, järjestys käyntiajan (mittarilukeman) mukaan, uusin ensin
+    const items = [];
+    legs.forEach(l => items.push({t:"leg", d:l, k:parseNum(l.mhEnd)}));
+    fuelings.forEach(f => items.push({t:"fuel", d:f, k:(f.mh?parseNum(f.mh):lmh)+0.001}));
+    items.sort((a,b)=> b.k - a.k);
+
+    if(items.length===0) {
+      html += `<div class="empty"><div class="empty-icon">⚓</div><div>Ei merkintöjä vielä</div></div>`;
+    } else {
+      items.forEach(it => {
+        if(it.t==="leg") {
+          const leg=it.d, h=legH(leg), f=legF(leg), n=legN(leg);
+          html += `
+          <div class="leg">
+            <div class="leg-head">
+              <span class="leg-route2">${leg.from} → ${leg.to}</span>
+              <span class="leg-d">${leg.date}</span>
+              <span class="leg-acts">
+                <button class="btn-edit" onclick="editLeg('${leg.id}')">✏️</button>
+                <button class="btn-del" onclick="deleteLeg('${leg.id}')">✕</button>
+              </span>
+            </div>
+            <div class="leg-meta">
+              <span>⏱ <b>${dur(h)}</b></span>
+              <span>⛽ <b>${f} L</b></span>
+              <span>🧭 <b>${n} nm</b>${leg.nm?'':' <span style="opacity:.6">(arvio)</span>'}</span>
+              <span>⚙ <b>${leg.mhStart}–${leg.mhEnd}</b></span>
+            </div>
+            ${leg.notes?`<div class="leg-note2">${leg.notes}</div>`:''}
+          </div>`;
+        } else {
+          const f=it.d;
+          html += `
+          <div class="leg fuelcard">
+            <div class="leg-head">
+              <span class="leg-route2">⛽ Tankkaus</span>
+              <span class="leg-d">${f.date||""}</span>
+              <span class="leg-acts">
+                <button class="btn-del" onclick="deleteFueling('${f.id}')">✕</button>
+              </span>
+            </div>
+            <div class="leg-meta">
+              <span>🛢 <b>${(f.liters||0).toFixed(1)} L</b></span>
+              ${f.mh?`<span>⚙ <b>${f.mh} h</b></span>`:''}
+              ${f.ppl?`<span><b>${f.ppl.toFixed(3)} €/L</b></span>`:''}
+              ${f.total?`<span>💶 <b>${f.total.toFixed(2)} €</b></span>`:''}
+            </div>
+          </div>`;
+        }
       });
     }
   }
@@ -299,6 +357,7 @@ function render() {
       <div id="previewBox" class="hidden"></div>
       <div id="errMsg" class="hidden errmsg"></div>
       <button class="btn-save" onclick="saveLeg()">💾 ${editId?"Tallenna muutokset":"Tallenna etappi"}</button>
+      <button class="btn-cancel" onclick="cancelForm()">Peruuta</button>
     </div>`;
   }
 
@@ -334,6 +393,75 @@ function render() {
       <div class="kv-row"><span class="kv-lbl">Tankilla käyntiaikaa</span><span class="kv-val">~${Math.round(fuel/cons)} h</span></div>
       <div class="kv-row"><span class="kv-lbl">Tankilla matkaa</span><span class="kv-val">~${Math.round(fuel/cons*25)} nm</span></div>
     </div>`;
+
+    // Todellinen kulutus & kustannukset tankkauslokin pohjalta
+    const totL = fuelings.reduce((s,f)=>s+(f.liters||0),0);
+    const totCost = fuelings.reduce((s,f)=>s+(f.total||0),0);
+    const avgPpl = totL>0 && totCost>0 ? totCost/totL : 0;
+    const realCons = th>0 && totL>0 ? totL/th : 0;
+    const costPerH = th>0 && totCost>0 ? totCost/th : 0;
+    const costPerNm = tn>0 && totCost>0 ? totCost/tn : 0;
+    html += `
+    <div class="card">
+      <div class="section-title">Todellinen kulutus & kustannukset</div>`;
+    if(fuelings.length===0) {
+      html += `<div style="font-size:13px;color:#7A9AB5">Lisää tankkauksia (näpäytä loki-sivun polttoainemittaria), niin näet todellisen kulutuksen ja kustannukset käyntiaikoihin ja matkaan suhteutettuna.</div>`;
+    } else {
+      html += `
+      <div class="kv-row"><span class="kv-lbl">Tankattu yhteensä</span><span class="kv-val">${totL.toFixed(0)} L</span></div>
+      <div class="kv-row"><span class="kv-lbl">Maksettu yhteensä</span><span class="kv-val">${totCost>0?totCost.toFixed(2)+" €":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Keskihinta</span><span class="kv-val">${avgPpl>0?avgPpl.toFixed(3)+" €/L":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Todellinen kulutus</span><span class="kv-val" style="color:#4A90B8">${realCons>0?realCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kulutus / merimaili</span><span class="kv-val">${tn>0&&totL>0?(totL/tn).toFixed(2)+" L/nm":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kustannus / tunti</span><span class="kv-val">${costPerH>0?costPerH.toFixed(2)+" €/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kustannus / merimaili</span><span class="kv-val">${costPerNm>0?costPerNm.toFixed(2)+" €/nm":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Todellinen kulutus = tankattu yhteensä ÷ käyntitunnit (${th.toFixed(1)} h). Tarkin, kun loki ja tankkaukset kattavat saman jakson.</div>`;
+    }
+    html += `</div>`;
+
+    // Kulutus tankkausväleistä (litrat ÷ käyntiaika fillien välillä, mittarilukemien perusteella)
+    const fv = fuelings.filter(f=>f.mh>0).sort((a,b)=>a.mh-b.mh);
+    let lastCons=0, lastBurn=0, lastHrs=0, allCons=0, allBurn=0, allHrs=0;
+    if(fv.length>=2) {
+      const a=fv[fv.length-2], b=fv[fv.length-1];
+      lastHrs = b.mh - a.mh; lastBurn = b.liters||0;
+      if(lastHrs>0) lastCons = lastBurn/lastHrs;
+      allHrs = fv[fv.length-1].mh - fv[0].mh;
+      allBurn = fv.slice(1).reduce((s,f)=>s+(f.liters||0),0);
+      if(allHrs>0) allCons = allBurn/allHrs;
+    }
+    html += `
+    <div class="card">
+      <div class="section-title">Kulutus tankkausväleistä</div>`;
+    if(fv.length<2) {
+      html += `<div style="font-size:13px;color:#7A9AB5">Tarvitaan vähintään 2 tankkausta mittarilukemineen. Kulutus lasketaan tankattujen litrojen ja mittarilukemien erotuksesta.</div>`;
+    } else {
+      html += `
+      <div class="kv-row"><span class="kv-lbl">Viim. tankkausväli<br><span style="font-size:11px;opacity:.7">${lastBurn.toFixed(0)} L ÷ ${lastHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${lastCons>0?lastCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kaikki tankkaukset<br><span style="font-size:11px;opacity:.7">${allBurn.toFixed(0)} L ÷ ${allHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${allCons>0?allCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Lasketaan tankattujen litrojen ja mittarilukemien erotuksesta. Tarkin, kun tankki täytetään täyteen joka tankkauksella.</div>`;
+    }
+    html += `</div>`;
+
+    // Tankkausloki
+    if(fuelings.length>0) {
+      html += `<div class="card"><div class="section-title">Tankkausloki</div>`;
+      [...fuelings].sort((a,b)=>(b.mh||0)-(a.mh||0)).forEach(f => {
+        html += `
+        <div class="fuelrow">
+          <div style="flex:1">
+            <div class="fuelrow-date">${f.date||"–"}</div>
+            <div class="fuelrow-sub">${f.mh?"⚙ "+f.mh+" h":""}${f.mh&&f.ppl?" · ":""}${f.ppl?f.ppl.toFixed(3)+" €/L":""}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="fuelrow-l">${(f.liters||0).toFixed(1)} L</div>
+            <div class="fuelrow-tot">${f.total?f.total.toFixed(2)+" €":""}</div>
+          </div>
+          <button class="btn-del" onclick="deleteFueling('${f.id}')">✕</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
 
   html += `</div>`;
@@ -346,6 +474,15 @@ function render() {
       if(el) el.addEventListener("input", updatePreview);
     });
     updatePreview();
+  }
+
+  // Tankkauslomakkeen live-laskenta
+  if(showFuel) {
+    ["fkL","fkPpl","fkTot"].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.addEventListener("input", updateFuelingHint);
+    });
+    updateFuelingHint();
   }
 }
 
@@ -389,7 +526,45 @@ function setTab(t) {
   render();
 }
 
+function cancelForm() { editId = null; tab = "loki"; render(); }
+
 function toggleFuel() { showFuel = !showFuel; render(); }
+
+function updateFuelingHint() {
+  const el = document.getElementById("fkHint"); if(!el) return;
+  const L = parseNum(document.getElementById("fkL").value);
+  const ppl = parseNum(document.getElementById("fkPpl").value);
+  const tot = parseNum(document.getElementById("fkTot").value);
+  el.style.color = "#7A9AB5";
+  if(L>0 && ppl>0 && tot<=0) el.textContent = `≈ yhteensä ${(L*ppl).toFixed(2)} €`;
+  else if(L>0 && tot>0 && ppl<=0) el.textContent = `≈ ${(tot/L).toFixed(3)} €/L`;
+  else if(L>0 && ppl>0 && tot>0) el.textContent = `${L} L × ${ppl} €/L = ${(L*ppl).toFixed(2)} €`;
+  else el.textContent = "Täytä litrat ja joko €/L tai yhteensä €.";
+}
+
+function logFueling() {
+  const date = document.getElementById("fkDate").value;
+  const L = parseNum(document.getElementById("fkL").value);
+  let mh = parseNum(document.getElementById("fkMh").value);
+  let ppl = parseNum(document.getElementById("fkPpl").value);
+  let tot = parseNum(document.getElementById("fkTot").value);
+  const hint = document.getElementById("fkHint");
+  if(L<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent="❌ Anna tankatut litrat."; } return; }
+  if(tot<=0 && ppl>0) tot = L*ppl;
+  if(ppl<=0 && tot>0) ppl = tot/L;
+  if(mh<=0) mh = latestMh();
+  fuelings.push({id:"f"+Date.now(), date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0});
+  fuel = Math.min(TANK, fuel+L);
+  persist();
+  showFuel = false;
+  render();
+}
+
+function deleteFueling(id) {
+  fuelings = fuelings.filter(f=>f.id!==id);
+  persist();
+  render();
+}
 
 function addFuelClick() {
   const v = parseFloat(document.getElementById("addFuelInp").value);
