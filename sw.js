@@ -1,7 +1,7 @@
 // Veneloki – service worker
 // Tallentaa sovelluksen tiedostot laitteelle, jotta se toimii ilman nettiä.
 // Nosta versionumeroa aina kun päivität sovellusta, niin vanha välimuisti vaihtuu.
-const CACHE = "veneloki-v15";
+const CACHE = "veneloki-v16";
 
 const ASSETS = [
   "./",
@@ -33,20 +33,21 @@ self.addEventListener("activate", (e) => {
   );
 });
 
-// Haku: yritä ensin verkosta, ja jos ei onnistu, tarjoa välimuistista.
-// Päivitä samalla välimuisti uusimmalla versiolla (stale-while-revalidate).
+// Haku: NETWORK-FIRST. Netissä haetaan aina tuorein versio ja päivitetään välimuisti.
+// Jos verkko ei vastaa 2,5 s sisällä (heikko signaali) tai puuttuu (offline), tarjotaan välimuistista.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  const network = fetch(e.request).then((res) => {
+    if (res && res.status === 200 && res.type === "basic") {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => c.put(e.request, copy));
+    }
+    return res;
+  }).catch(() => null);
+  const timeout = new Promise((resolve) => setTimeout(() => resolve(null), 2500));
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const fetched = fetch(e.request).then((res) => {
-        if (res && res.status === 200 && res.type === "basic") {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(e.request, copy));
-        }
-        return res;
-      }).catch(() => cached);
-      return cached || fetched;
-    })
+    Promise.race([network, timeout]).then((res) =>
+      res || caches.match(e.request).then((c) => c || caches.match("./index.html"))
+    )
   );
 });
