@@ -265,6 +265,7 @@ function render() {
           <button class="btn-set" onclick="setFuelDirect()">📍 Aseta</button>
           <button class="btn-green" onclick="setFuelFull()">⛽ Täysi</button>
         </div>
+        <button class="btn-cancel" onclick="toggleFuel()">Peruuta</button>
       </div>`;
     } else {
       html += `<button class="btn-fuel-action" onclick="toggleFuel()">⛽ Kirjaa tankkaus / korjaa taso</button>`;
