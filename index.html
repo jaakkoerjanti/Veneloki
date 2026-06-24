@@ -196,7 +196,7 @@ const HIST_FUEL = [
 ];
 
 // State
-let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all";
+let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all", statPeriod = "month";
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
@@ -301,6 +301,102 @@ function hoursSinceFull() {
 }
 function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
 function itemKey(date, sub) { const t = Date.parse((date||"")+"T00:00:00"); return (isNaN(t)?0:t) + (sub||0); }
+
+// --- Tilastokaaviot ---
+function setStatPeriod(p) { statPeriod = p; render(); }
+
+function aggFuel(period) {
+  const map = {};
+  fuelings.forEach(f => {
+    if(!f.date || f.date.length<7) return;
+    const key = period==="year" ? f.date.slice(0,4) : f.date.slice(0,7);
+    if(!map[key]) map[key] = { l:0, e:0 };
+    map[key].l += (f.liters||0);
+    map[key].e += (f.total||0);
+  });
+  return Object.keys(map).sort().map(k => ({ key:k, l:map[k].l, e:map[k].e }));
+}
+function periodLabel(key) {
+  if(key.length===4) return key;                 // vuosi
+  const [y,m] = key.split("-"); return parseInt(m)+"/"+y.slice(2); // 7/24
+}
+function barChartSVG(data, color) {
+  if(!data.length) return '<div style="font-size:13px;color:#7A9AB5">Ei dataa vielä.</div>';
+  const n=data.length, bw=26, gap=12, padL=6, padR=6, padT=18, padB=22, H=120;
+  const cw = padL+padR + n*bw + (n-1)*gap;
+  const max = Math.max(...data.map(d=>d.value), 1);
+  const chartH = H - padT - padB;
+  let s = "";
+  data.forEach((d,i) => {
+    const x = padL + i*(bw+gap);
+    const h = (d.value/max)*chartH;
+    const y = padT + (chartH - h);
+    const lbl = d.value>=100 ? Math.round(d.value) : Math.round(d.value*10)/10;
+    s += `<rect x="${x}" y="${y.toFixed(1)}" width="${bw}" height="${Math.max(0,h).toFixed(1)}" rx="4" fill="${color}"/>`;
+    s += `<text x="${(x+bw/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E8EFF5">${lbl}</text>`;
+    s += `<text x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="#7A9AB5">${d.label}</text>`;
+  });
+  return `<svg viewBox="0 0 ${cw} ${H}" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+}
+
+function harborCounts() {
+  const map = {};
+  legs.forEach(l => {
+    [l.from, l.to].forEach(p => {
+      const name = (p||"").trim();
+      if(!name || name==="?") return;
+      map[name] = (map[name]||0)+1;
+    });
+  });
+  return Object.entries(map).map(([name,count]) => ({name,count})).sort((a,b)=>b.count-a.count);
+}
+
+// Likimääräiset koordinaatit SW-saaristolle (lat, lon). Voit korjata/lisätä vapaasti.
+const GAZ = {
+  "Naantali":[60.468,22.025], "Ruissalo":[60.435,22.170], "Turku":[60.448,22.265],
+  "Nauvo":[60.193,21.905], "Korpoström":[60.103,21.585], "Houtskari Näsby":[60.230,21.365],
+  "Mossala":[60.275,21.270], "Jurmo":[59.823,21.585], "Isokari":[60.717,21.027],
+  "Uusikaupunki":[60.800,21.410], "Katanpää":[60.520,21.290], "Merimasku":[60.553,21.852],
+  "Pensar":[60.300,22.060], "Vepsä":[60.335,22.100], "Sattmark":[60.265,22.110],
+  "Lappo":[60.345,21.040], "Kumlinge":[60.262,20.780], "Sottunga":[60.130,20.670], "Kökar":[59.920,20.900]
+};
+function coordLookup(name) {
+  const nm = (name||"").trim();
+  if(!nm || nm==="?") return null;
+  if(GAZ[nm]) return GAZ[nm];
+  for(const k in GAZ) { if(nm.indexOf(k)>=0) return GAZ[k]; } // esim. "Kökar Brudhel" -> Kökar
+  return null;
+}
+function mapSVG() {
+  // Kerää tunnetut satamat ja reitit
+  const counts = {};
+  harborCounts().forEach(h => { const c=coordLookup(h.name); if(c) counts[h.name]=(counts[h.name]||0)+h.count; });
+  const pts = Object.keys(counts).map(name => ({ name, c:coordLookup(name), n:counts[name] }));
+  if(pts.length<2) return '<div style="font-size:13px;color:#7A9AB5">Ei tarpeeksi paikkoja kartalle (lisää koordinaatteja tai etappeja).</div>';
+  let minLat=99,maxLat=-99,minLon=999,maxLon=-999;
+  pts.forEach(p => { minLat=Math.min(minLat,p.c[0]); maxLat=Math.max(maxLat,p.c[0]); minLon=Math.min(minLon,p.c[1]); maxLon=Math.max(maxLon,p.c[1]); });
+  const W=340, H=300, pad=26;
+  const midLat=(minLat+maxLat)/2, kx=Math.cos(midLat*Math.PI/180);
+  const lonSpan=Math.max((maxLon-minLon)*kx, 0.001), latSpan=Math.max(maxLat-minLat, 0.001);
+  const sc=Math.min((W-2*pad)/lonSpan, (H-2*pad)/latSpan);
+  const offX=(W-lonSpan*sc)/2, offY=(H-latSpan*sc)/2;
+  const proj = (lat,lon) => [ offX+((lon-minLon)*kx)*sc, offY+((maxLat-lat))*sc ];
+  // reitit
+  let lines="";
+  legs.forEach(l => {
+    const a=coordLookup(l.from), b=coordLookup(l.to);
+    if(a&&b){ const [x1,y1]=proj(a[0],a[1]), [x2,y2]=proj(b[0],b[1]); lines+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#4A90B8" stroke-width="1.5" opacity="0.5"/>`; }
+  });
+  const maxN=Math.max(...pts.map(p=>p.n),1);
+  let dots="", labels="";
+  pts.forEach(p => {
+    const [x,y]=proj(p.c[0],p.c[1]);
+    const r=4+(p.n/maxN)*6;
+    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#2ECC71" opacity="0.85" stroke="#0E2433" stroke-width="1.5"/>`;
+    labels+=`<text x="${x.toFixed(1)}" y="${(y-r-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E8EFF5">${esc(p.name)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;background:rgba(74,144,184,0.06);border-radius:10px">${lines}${dots}${labels}</svg>`;
+}
 
 function render() {
   const cf = computeFuel();
@@ -628,6 +724,49 @@ function render() {
       });
       html += `</div>`;
     }
+
+    // --- Kaaviot: litrat & € per kk/vuosi ---
+    const agg = aggFuel(statPeriod);
+    const litData = agg.map(a => ({ label:periodLabel(a.key), value:a.l }));
+    const eurData = agg.map(a => ({ label:periodLabel(a.key), value:a.e }));
+    html += `
+    <div class="card">
+      <div style="display:flex;align-items:center;margin-bottom:12px">
+        <div class="section-title" style="margin:0">Tankkaukset & kustannukset</div>
+        <div class="logfilter" style="margin:0 0 0 auto;width:auto">
+          <button class="${statPeriod==='month'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('month')">Kuukausi</button>
+          <button class="${statPeriod==='year'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('year')">Vuosi</button>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#7A9AB5;margin-bottom:4px">Tankatut litrat (L)</div>
+      ${barChartSVG(litData, "#4A90B8")}
+      <div style="font-size:12px;color:#7A9AB5;margin:14px 0 4px">Kustannukset (€)</div>
+      ${barChartSVG(eurData, "#2ECC71")}
+    </div>`;
+
+    // --- Eniten käydyt satamat ---
+    const harbors = harborCounts().slice(0, 10);
+    if(harbors.length>0) {
+      const hmax = harbors[0].count;
+      html += `<div class="card"><div class="section-title">Eniten käydyt satamat</div>`;
+      harbors.forEach(h => {
+        const w = Math.round((h.count/hmax)*100);
+        html += `
+        <div style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px"><span>${esc(h.name)}</span><span style="color:#7A9AB5">${h.count}×</span></div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:5px;height:8px;overflow:hidden"><div style="width:${w}%;height:100%;background:#4A90B8;border-radius:5px"></div></div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    // --- Kartta + reitit ---
+    html += `
+    <div class="card">
+      <div class="section-title">Kartta & reitit</div>
+      ${mapSVG()}
+      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">Pisteen koko kertoo käyntien määrän. Koordinaatit ovat likimääräisiä — voit tarkentaa niitä koodin GAZ-taulusta.</div>
+    </div>`;
   }
 
   html += `</div>`;
