@@ -196,13 +196,14 @@ const HIST_FUEL = [
 ];
 
 // State
-let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all";
+let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all";
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
   try { const v = localStorage.getItem("vl5-legs"); if(v) legs = JSON.parse(v); else legs = JSON.parse(JSON.stringify(HIST)); } catch { legs = JSON.parse(JSON.stringify(HIST)); }
   try { const v = localStorage.getItem("vl5-fuel"); if(v) fuel = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-cons"); if(v) cons = parseFloat(v); } catch {}
+  try { const v = localStorage.getItem("vl5-consnm"); if(v) consNm = parseFloat(v)||0; } catch {}
   try { const v = localStorage.getItem("vl5-fuelings"); if(v) fuelings = JSON.parse(v); else fuelings = JSON.parse(JSON.stringify(HIST_FUEL)); } catch { fuelings = JSON.parse(JSON.stringify(HIST_FUEL)); }
   try { const v = localStorage.getItem("vl5-cfg"); if(v) cfg = Object.assign(cfg, JSON.parse(v)); } catch {}
   TANK = parseNum(cfg.tank) || 350;
@@ -212,6 +213,7 @@ function persist() {
   try { localStorage.setItem("vl5-legs", JSON.stringify(legs)); } catch {}
   try { localStorage.setItem("vl5-fuel", String(fuel)); } catch {}
   try { localStorage.setItem("vl5-cons", String(cons)); } catch {}
+  try { localStorage.setItem("vl5-consnm", String(consNm)); } catch {}
   try { localStorage.setItem("vl5-fuelings", JSON.stringify(fuelings)); } catch {}
   try { localStorage.setItem("vl5-cfg", JSON.stringify(cfg)); } catch {}
 }
@@ -220,7 +222,11 @@ function parseNum(s) { return parseFloat(String(s||"").replace(",",".").trim()) 
 function esc(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 function getH(s,e) { const h = parseNum(e)-parseNum(s); return h>0?h:0; }
 function legH(l) { return getH(l.mhStart, l.mhEnd); }
-function legF(l) { const rate = l.fuelManual ? parseFloat(l.fuelManual) : cons; return Math.round(legH(l)*rate*10)/10; }
+function legF(l) {
+  if(l.fuelManual && parseNum(l.fuelManual)>0) return Math.round(legH(l)*parseNum(l.fuelManual)*10)/10; // etappikohtainen L/h
+  if(consNm>0) return Math.round(legN(l)*consNm*10)/10; // vaihtoehto: L/nm × matka
+  return Math.round(legH(l)*cons*10)/10; // oletus L/h
+}
 function legN(l) { return l.nm ? parseFloat(l.nm) : Math.round(legH(l)*25*10)/10; }
 function dur(h) { const hh=Math.floor(h), mm=Math.round((h-hh)*60); if(hh===0)return mm+"min"; if(mm===0)return hh+"h"; return hh+"h "+mm+"min"; }
 function fuelColor(pct) { return pct>50?"#2ECC71":pct>25?"#F39C12":"#E74C3C"; }
@@ -239,7 +245,32 @@ function fuelGaugeSVG(pct, fc) {
     <text x="104" y="110" class="gauge-ef">F</text>
   </svg>`;
 }
-function latestMh() { return legs.reduce((s,l)=>Math.max(s,parseNum(l.mhEnd)),0); }
+function latestMh() {
+  let m = 0;
+  legs.forEach(l => { const v = parseNum(l.mhEnd); if(v>m) m=v; });
+  fuelings.forEach(f => { const v = parseNum(f.mh); if(v>m) m=v; });
+  return m;
+}
+// Laskee tankin polttoaineen: viimeisestä TÄYDESTÄ tankkauksesta täysi tankki,
+// miinus sen jälkeen ajetut tunnit × kulutus, plus mahdolliset vajaatankkaukset.
+// Palauttaa null jos täysiä tankkauksia ei ole (silloin käytetään tallennettua arvoa).
+function computeFuel() {
+  const fulls = fuelings.filter(f => f.full && parseNum(f.mh)>0);
+  if(fulls.length===0) return null;
+  const refMh = parseNum(fulls.reduce((a,b) => parseNum(b.mh)>parseNum(a.mh)?b:a, fulls[0]).mh);
+  // Summaa etappien oma kulutus refMh:n jälkeen (osittain refMh:n yli menevä etappi skaalataan)
+  let used = 0;
+  legs.forEach(l => {
+    const e = parseNum(l.mhEnd), s = parseNum(l.mhStart);
+    if(e > refMh) {
+      if(s >= refMh) used += legF(l);
+      else if(e>s) used += legF(l) * ((e - refMh) / (e - s));
+    }
+  });
+  let level = TANK - used;
+  fuelings.forEach(f => { if(parseNum(f.mh) > refMh && !f.full) level += (f.liters||0); });
+  return Math.max(0, Math.min(TANK, level));
+}
 function totalH() { return legs.reduce((s,l)=>s+legH(l),0); }
 function totalNm() { return legs.reduce((s,l)=>s+legN(l),0); }
 function fuelPct() { return Math.min(100,Math.max(0,fuel/TANK*100)); }
@@ -247,6 +278,8 @@ function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
 function itemKey(date, sub) { const t = Date.parse((date||"")+"T00:00:00"); return (isNaN(t)?0:t) + (sub||0); }
 
 function render() {
+  const cf = computeFuel();
+  if(cf !== null) fuel = cf;
   const pct = fuelPct();
   const fc = fuelColor(pct);
   const lmh = latestMh();
@@ -261,7 +294,7 @@ function render() {
         </div>
         <div class="header-metrics" onclick="toggleFuel()">
           <div><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b> ajoaikaa</div>
-          <div><b>${Math.round(fuel/cons*25)} nm</b> jäljellä</div>
+          <div><b>${Math.round(consNm>0?fuel/consNm:fuel/cons*25)} nm</b> jäljellä</div>
         </div>
       </div>
       <div class="header-gauge" onclick="toggleFuel()">
@@ -446,8 +479,8 @@ function render() {
         <div><label>Mittari lähtö (h)</label><input type="text" inputmode="decimal" id="fMhS" value="${defMhS}" placeholder="${lmh.toFixed(1)}"></div>
         <div><label>Mittari tulo (h)</label><input type="text" inputmode="decimal" id="fMhE" value="${defMhE}" placeholder="esim. 588.5"></div>
       </div>
-      <label>Kulutus L/h (oletus ${cons} L/h)</label>
-      <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="${cons} L/h (oletus)">
+      <label>Kulutus L/h — etappikohtainen${consNm>0?` (tyhjä = ${consNm} L/nm × matka)`:` (tyhjä = oletus ${cons} L/h)`}</label>
+      <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="${cons} L/h">
       <div id="durBox" class="hidden"></div>
       <label>Matka Skipposta (nm) — valinnainen</label>
       <input type="text" inputmode="decimal" id="fNm" value="${defNm}" placeholder="Tyhjä = lasketaan automaattisesti">
@@ -485,6 +518,11 @@ function render() {
         <input type="number" step="0.5" value="${cons}" onchange="updateCons(this.value)" style="width:90px;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:20px;font-weight:700;text-align:center;color-scheme:dark">
         <span style="font-size:15px;color:#7A9AB5">L/h oletuskulutus</span>
       </div>
+      <div class="flex-row" style="margin-top:10px">
+        <input type="number" step="0.1" value="${consNm||''}" onchange="updateConsNm(this.value)" placeholder="0" style="width:90px;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:20px;font-weight:700;text-align:center;color-scheme:dark">
+        <span style="font-size:15px;color:#7A9AB5">L/nm vaihtoehto</span>
+      </div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Etapin kulutus lasketaan ensisijaisesti etapille annetusta L/h:sta. Jos etapille ei anneta L/h:ta ja L/nm on asetettu (> 0), käytetään matkaa × L/nm. Muuten oletus L/h.</div>
     </div>
     <div class="card">
       <div class="section-title">Keskiluvut</div>
@@ -676,7 +714,7 @@ function photoChosen(input) {
 }
 
 function exportData() {
-  const data = { app:"Veneloki", v:1, exported:new Date().toISOString(), cfg:cfg, fuel:fuel, cons:cons, legs:legs, fuelings:fuelings };
+  const data = { app:"Veneloki", v:1, exported:new Date().toISOString(), cfg:cfg, fuel:fuel, cons:cons, consNm:consNm, legs:legs, fuelings:fuelings };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -707,6 +745,7 @@ function importFileChosen(input) {
       if(Array.isArray(data.fuelings)) fuelings = data.fuelings;
       if(typeof data.fuel === "number") fuel = data.fuel;
       if(typeof data.cons === "number") cons = data.cons;
+      if(typeof data.consNm === "number") consNm = data.consNm;
       if(data.cfg && typeof data.cfg === "object") { cfg = Object.assign(cfg, data.cfg); TANK = parseNum(cfg.tank) || TANK; }
       persist();
       showSettings = false;
@@ -803,7 +842,13 @@ function setFuelDirect() {
 
 function updateCons(v) {
   const n = parseFloat(v);
-  if(!isNaN(n)&&n>0) { cons=n; persist(); }
+  if(!isNaN(n)&&n>0) { cons=n; persist(); render(); }
+}
+function updateConsNm(v) {
+  const n = parseFloat(v);
+  consNm = (!isNaN(n)&&n>0) ? n : 0;
+  persist();
+  render();
 }
 
 function saveLeg() {
