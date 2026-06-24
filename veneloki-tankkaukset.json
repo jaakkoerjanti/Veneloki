@@ -1,0 +1,15 @@
+{
+  "app": "Veneloki",
+  "v": 1,
+  "exported": "2026-06-23",
+  "fuel": 350,
+  "fuelings": [
+    {"id":"hf1","date":"2024-07-15","mh":534.1,"liters":132,"ppl":0,"total":0,"full":true},
+    {"id":"hf2","date":"2024-08-10","mh":549.5,"liters":154,"ppl":0,"total":0,"full":true},
+    {"id":"hf3","date":"2024-08-25","mh":555.6,"liters":146,"ppl":0,"total":0,"full":true},
+    {"id":"hf4","date":"2025-05-20","mh":561.8,"liters":113,"ppl":0,"total":0,"full":true},
+    {"id":"hf5","date":"2025-06-15","mh":572.7,"liters":203.42,"ppl":2.458,"total":500,"full":false},
+    {"id":"hf6","date":"2025-07-20","mh":586.2,"liters":124,"ppl":0,"total":0,"full":false},
+    {"id":"hf7","date":"2025-08-10","mh":588.7,"liters":152.82,"ppl":0,"total":0,"full":true}
+  ]
+}
