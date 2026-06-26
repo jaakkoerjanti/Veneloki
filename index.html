@@ -196,7 +196,7 @@ const HIST_FUEL = [
 ];
 
 // State
-let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all", statPeriod = "month";
+let legs = [], fuelings = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, showFuel = false, showSettings = false, logFilter = "all", statPeriod = "month", statYear = "all";
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
@@ -304,6 +304,22 @@ function itemKey(date, sub) { const t = Date.parse((date||"")+"T00:00:00"); retu
 
 // --- Tilastokaaviot ---
 function setStatPeriod(p) { statPeriod = p; render(); }
+function setStatYear(y) { statYear = y; render(); }
+function statYears() {
+  const set = new Set();
+  fuelings.forEach(f => { if(f.date && f.date.length>=4) set.add(f.date.slice(0,4)); });
+  legs.forEach(l => { if(l.date && l.date.length>=4) set.add(l.date.slice(0,4)); });
+  return [...set].sort();
+}
+function realStats(yearKey) {
+  const fz = yearKey==="all" ? fuelings : fuelings.filter(f => (f.date||"").slice(0,4)===yearKey);
+  const lz = yearKey==="all" ? legs : legs.filter(l => (l.date||"").slice(0,4)===yearKey);
+  const L = fz.reduce((s,f)=>s+(f.liters||0),0);
+  const cost = fz.reduce((s,f)=>s+(f.total||0),0);
+  const hrs = lz.reduce((s,l)=>s+legH(l),0);
+  const nm = lz.reduce((s,l)=>s+legN(l),0);
+  return { L, cost, hrs, nm };
+}
 
 function aggFuel(period) {
   const map = {};
@@ -617,26 +633,36 @@ function render() {
 
   if(tab==="tilasto") {
     const th = totalH(), tn = totalNm(), lm = latestMh();
-    // Todellinen kulutus & kustannukset — ylimmäisenä
-    const totL = fuelings.reduce((s,f)=>s+(f.liters||0),0);
-    const totCost = fuelings.reduce((s,f)=>s+(f.total||0),0);
-    const avgPpl = totL>0 && totCost>0 ? totCost/totL : 0;
-    const realCons = th>0 && totL>0 ? totL/th : 0;
-    const costPerH = th>0 && totCost>0 ? totCost/th : 0;
-    const costPerNm = tn>0 && totCost>0 ? totCost/tn : 0;
-    html += `<div class="card" style="margin-bottom:12px"><div class="section-title">Todellinen kulutus & kustannukset</div>`;
+    // Todellinen kulutus & kustannukset — per kausi/vuosi + kaikki
+    const years = statYears();
+    if(statYear!=="all" && !years.includes(statYear)) statYear = "all";
+    const rs = realStats(statYear);
+    const r_avgPpl = rs.L>0 && rs.cost>0 ? rs.cost/rs.L : 0;
+    const r_cons = rs.hrs>0 && rs.L>0 ? rs.L/rs.hrs : 0;
+    const r_cph = rs.hrs>0 && rs.cost>0 ? rs.cost/rs.hrs : 0;
+    const r_cpnm = rs.nm>0 && rs.cost>0 ? rs.cost/rs.nm : 0;
+    const r_lpnm = rs.nm>0 && rs.L>0 ? rs.L/rs.nm : 0;
+    let yrBtns = years.map(y => `<button class="${statYear===y?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('${y}')">${y}</button>`).join("");
+    yrBtns += `<button class="${statYear==='all'?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('all')">Kaikki</button>`;
+    html += `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div class="section-title" style="margin:0">Todellinen kulutus & kustannukset</div>
+        ${years.length>1?`<div class="logfilter" style="margin:0;width:auto;flex-wrap:wrap">${yrBtns}</div>`:""}
+      </div>`;
     if(fuelings.length===0) {
       html += `<div style="font-size:13px;color:#7A9AB5">Lisää tankkauksia (näpäytä loki-sivun polttoainemittaria), niin näet todellisen kulutuksen ja kustannukset käyntiaikoihin ja matkaan suhteutettuna.</div>`;
     } else {
       html += `
-      <div class="kv-row"><span class="kv-lbl">Tankattu yhteensä</span><span class="kv-val">${totL.toFixed(0)} L</span></div>
-      <div class="kv-row"><span class="kv-lbl">Maksettu yhteensä</span><span class="kv-val">${totCost>0?totCost.toFixed(2)+" €":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Keskihinta</span><span class="kv-val">${avgPpl>0?avgPpl.toFixed(3)+" €/L":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Todellinen kulutus</span><span class="kv-val" style="color:#4A90B8">${realCons>0?realCons.toFixed(1)+" L/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kulutus / merimaili</span><span class="kv-val">${tn>0&&totL>0?(totL/tn).toFixed(2)+" L/nm":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kustannus / tunti</span><span class="kv-val">${costPerH>0?costPerH.toFixed(2)+" €/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kustannus / merimaili</span><span class="kv-val">${costPerNm>0?costPerNm.toFixed(2)+" €/nm":"–"}</span></div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Todellinen kulutus = tankattu yhteensä ÷ käyntitunnit (${th.toFixed(1)} h). Tarkin, kun loki ja tankkaukset kattavat saman jakson.</div>`;
+      <div class="kv-row"><span class="kv-lbl">Tankattu yhteensä</span><span class="kv-val">${rs.L.toFixed(0)} L</span></div>
+      <div class="kv-row"><span class="kv-lbl">Maksettu yhteensä</span><span class="kv-val">${rs.cost>0?rs.cost.toFixed(2)+" €":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Keskihinta</span><span class="kv-val">${r_avgPpl>0?r_avgPpl.toFixed(3)+" €/L":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Käyntitunnit</span><span class="kv-val">${rs.hrs.toFixed(1)} h</span></div>
+      <div class="kv-row"><span class="kv-lbl">Matka</span><span class="kv-val">${rs.nm.toFixed(0)} nm</span></div>
+      <div class="kv-row"><span class="kv-lbl">Todellinen kulutus</span><span class="kv-val" style="color:#4A90B8">${r_cons>0?r_cons.toFixed(1)+" L/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kulutus / merimaili</span><span class="kv-val">${r_lpnm>0?r_lpnm.toFixed(2)+" L/nm":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kustannus / tunti</span><span class="kv-val">${r_cph>0?r_cph.toFixed(2)+" €/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">Kustannus / merimaili</span><span class="kv-val">${r_cpnm>0?r_cpnm.toFixed(2)+" €/nm":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">${statYear==='all'?'Kaikki kaudet yhteensä.':'Kausi '+statYear+'.'} Todellinen kulutus = tankatut litrat ÷ käyntitunnit. Tarkin, kun loki ja tankkaukset kattavat saman jakson.</div>`;
     }
     html += `</div>`;
     html += `
