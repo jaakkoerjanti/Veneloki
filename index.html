@@ -228,9 +228,10 @@ function esc(s) { return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g
 function getH(s,e) { const h = parseNum(e)-parseNum(s); return h>0?h:0; }
 function legH(l) { return getH(l.mhStart, l.mhEnd); }
 function legF(l) {
-  if(l.fuelManual && parseNum(l.fuelManual)>0) return Math.round(legH(l)*parseNum(l.fuelManual)*10)/10; // etappikohtainen L/h
-  if(consNm>0) return Math.round(legN(l)*consNm*10)/10; // vaihtoehto: L/nm × matka
-  return Math.round(legH(l)*cons*10)/10; // oletus L/h
+  if(l.fuelManual && parseNum(l.fuelManual)>0) return Math.round(legH(l)*parseNum(l.fuelManual)*10)/10;   // per-etappi L/h
+  if(l.fuelManualNm && parseNum(l.fuelManualNm)>0) return Math.round(legN(l)*parseNum(l.fuelManualNm)*10)/10; // per-etappi L/nm
+  if(consNm>0) return Math.round(legN(l)*consNm*10)/10; // globaali L/nm
+  return Math.round(legH(l)*cons*10)/10;                // globaali L/h
 }
 function legN(l) { return l.nm ? parseFloat(l.nm) : Math.round(legH(l)*25*10)/10; }
 function dur(h) { const hh=Math.floor(h), mm=Math.round((h-hh)*60); if(hh===0)return mm+"min"; if(mm===0)return hh+"h"; return hh+"h "+mm+"min"; }
@@ -622,6 +623,7 @@ function render() {
     const defNm = ll ? ll.nm : "";
     const defNotes = ll ? ll.notes : "";
     const defFuelM = ll ? (ll.fuelManual||"") : "";
+    const defFuelMNm = ll ? (ll.fuelManualNm||"") : "";
 
     html += `
     <div class="card" style="padding:20px">
@@ -636,10 +638,16 @@ function render() {
         <div><label>Mittari lähtö (h)</label><input type="text" inputmode="decimal" id="fMhS" value="${defMhS}" placeholder="${lmh.toFixed(1)}"></div>
         <div><label>Mittari tulo (h)</label><input type="text" inputmode="decimal" id="fMhE" value="${defMhE}" placeholder="esim. 588.5"></div>
       </div>
-      <label>Kulutus L/h — etappikohtainen${consNm>0?` (tyhjä = ${consNm} L/nm × matka)`:` (tyhjä = oletus ${cons} L/h)`}</label>
-      <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="${cons} L/h">
+      <label>Kulutus — etappikohtainen (täytä toinen tai jätä tyhjäksi)</label>
+      <div class="grid2">
+        <div><label style="font-size:11px;color:#7A9AB5">L/h (tunnit × kulutus)</label>
+          <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="esim. ${cons}"></div>
+        <div><label style="font-size:11px;color:#7A9AB5">L/nm (matka × kulutus)</label>
+          <input type="text" inputmode="decimal" id="fFuelMNm" value="${defFuelMNm}" placeholder="esim. ${consNm||2}"></div>
+      </div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:4px">Prioriteetti: L/h ensin, sitten L/nm, sitten globaali oletus (${consNm>0?consNm+" L/nm":cons+" L/h"}).</div>
       <div id="durBox" class="hidden"></div>
-      <label>Matka Skipposta (nm) — valinnainen</label>
+      <label>Kuljettu matka (nm) — valinnainen</label>
       <input type="text" inputmode="decimal" id="fNm" value="${defNm}" placeholder="Tyhjä = lasketaan automaattisesti">
       <label>Muistiinpanot</label>
       <textarea id="fNotes" rows="3" placeholder="Sää, nähtävyydet, huomiot...">${defNotes}</textarea>
@@ -864,7 +872,7 @@ function render() {
 
   // Attach live preview for uusi tab
   if(tab==="uusi") {
-    ["fMhS","fMhE","fFuelM"].forEach(id => {
+    ["fMhS","fMhE","fFuelM","fFuelMNm","fNm"].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.addEventListener("input", updatePreview);
     });
@@ -891,10 +899,20 @@ function updatePreview() {
 
   const h = getH(mhS.value, mhE.value);
   if(h>0) {
-    const rate = fFuelM&&fFuelM.value ? parseFloat(fFuelM.value) : cons;
-    const f = (h*rate).toFixed(1);
+    const fFuelMNmEl = document.getElementById("fFuelMNm");
+    const nmVal = document.getElementById("fNm") ? parseNum(document.getElementById("fNm").value) : 0;
+    let f, rate;
+    if(fFuelM && parseNum(fFuelM.value)>0) {
+      rate = parseNum(fFuelM.value); f = (h*rate).toFixed(1);
+    } else if(fFuelMNmEl && parseNum(fFuelMNmEl.value)>0 && nmVal>0) {
+      rate = parseNum(fFuelMNmEl.value); f = (nmVal*rate).toFixed(1);
+    } else if(consNm>0 && nmVal>0) {
+      f = (nmVal*consNm).toFixed(1);
+    } else {
+      f = (h*cons).toFixed(1);
+    }
     const nm2 = (h*25).toFixed(1);
-    const afterFuel = Math.max(0, fuel-(h*rate)).toFixed(0);
+    const afterFuel = Math.max(0, fuel-parseFloat(f)).toFixed(0);
     const afc = parseFloat(afterFuel)<50?"#E74C3C":"#2ECC71";
 
     durBox.className = "duration-box";
@@ -1139,6 +1157,7 @@ function saveLeg() {
   const fMhS = document.getElementById("fMhS").value;
   const fMhE = document.getElementById("fMhE").value;
   const fFuelM = document.getElementById("fFuelM").value.trim();
+  const fFuelMNm = document.getElementById("fFuelMNm").value.trim();
   const fNm = document.getElementById("fNm").value.trim();
   const fNotes = document.getElementById("fNotes").value.trim();
 
@@ -1158,7 +1177,7 @@ function saveLeg() {
 
   const rate = fFuelM ? parseFloat(fFuelM) : cons;
   const used = Math.round(h*rate*10)/10;
-  const newLeg = {id:editId||"u"+Date.now(),date:fDate,from:fFrom,to:fTo,mhStart:mhS,mhEnd:mhE,nm:fNm,notes:fNotes,fuelManual:fFuelM};
+  const newLeg = {id:editId||"u"+Date.now(),date:fDate,from:fFrom,to:fTo,mhStart:mhS,mhEnd:mhE,nm:fNm,notes:fNotes,fuelManual:fFuelM,fuelManualNm:fFuelMNm};
 
   if(editId) {
     const old = legs.find(l=>l.id===editId);
