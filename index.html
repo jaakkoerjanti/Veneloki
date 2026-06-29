@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!--
+  Veneloki — boat trip log & fuel tracking PWA
+  © 2026 Jaakko Erjanti. Kaikki oikeudet pidätetään. / All rights reserved.
+  Yhteydenotot / contact: jaakko@erjanti.fi
+-->
 <html lang="fi">
 <head>
 <meta charset="UTF-8">
@@ -202,6 +207,7 @@ const STR = {
     discSafety: `<b style="color:#E8EFF5">Turvallisuus.</b> Älä koskaan tee polttoaineen riittävyyttä tai navigointia koskevia päätöksiä pelkästään tämän sovelluksen perusteella. Pidä aina riittävä polttoainereservi, käytä ajantasaisia merikarttoja ja noudata hyvää merimiestapaa. Sovellus ei korvaa veneen mittareita, karttoja eikä omaa harkintaa.`,
     discPrivacy: `<b style="color:#E8EFF5">Yksityisyys.</b> Veneen tiedot, etapit ja tankkaukset tallennetaan vain tämän laitteen selaimeen (localStorage) — niitä ei lähetetä minnekään. Sivu käyttää kävijämäärän laskentaan GoatCounter-palvelua, joka kirjaa anonyymin sivulatauksen ilman evästeitä tai henkilötietoja, ja vain kun laite on verkossa. Tietojen säilyminen on omalla vastuullasi — ota säännöllisesti varmuuskopio. Selaimen "tyhjennä sivuston tiedot" -toiminto poistaa kaikki tiedot pysyvästi.`,
     sourceCode: `Lähdekoodi:`,
+    copyright: `Kaikki oikeudet pidätetään.`,
     foundBug: `Löysitkö virheen tai kehitysidean?`,
     sendFeedback: `Lähetä palautetta sähköpostilla`,
     cancel: `Peruuta`,
@@ -365,6 +371,7 @@ const STR = {
     discSafety: `<b style="color:#E8EFF5">Safety.</b> Never make decisions about fuel sufficiency or navigation based on this app alone. Always keep an adequate fuel reserve, use up-to-date nautical charts and follow good seamanship. The app does not replace the boat's gauges, charts or your own judgement.`,
     discPrivacy: `<b style="color:#E8EFF5">Privacy.</b> Your boat details, legs and fuelings are stored only in this device's browser (localStorage) — they are never sent anywhere. The page uses GoatCounter to count visits, which records an anonymous page view without cookies or personal data, and only when the device is online. Retaining your data is your own responsibility — back up regularly. The browser's "clear site data" function deletes all data permanently.`,
     sourceCode: `Source code:`,
+    copyright: `All rights reserved.`,
     foundBug: `Found a bug or have an idea?`,
     sendFeedback: `Send feedback by email`,
     cancel: `Cancel`,
@@ -528,6 +535,7 @@ const STR = {
     discSafety: `<b style="color:#E8EFF5">Säkerhet.</b> Fatta aldrig beslut om bränslets tillräcklighet eller navigering enbart utifrån denna app. Håll alltid en tillräcklig bränslereserv, använd uppdaterade sjökort och följ gott sjömanskap. Appen ersätter inte båtens instrument, sjökort eller ditt eget omdöme.`,
     discPrivacy: `<b style="color:#E8EFF5">Integritet.</b> Båtens uppgifter, etapper och tankningar lagras enbart i denna enhets webbläsare (localStorage) — de skickas aldrig någonstans. Sidan använder GoatCounter för att räkna besök, vilket registrerar en anonym sidvisning utan cookies eller personuppgifter, och endast när enheten är online. Att bevara dina data är ditt eget ansvar — säkerhetskopiera regelbundet. Webbläsarens "rensa webbplatsdata" raderar alla data permanent.`,
     sourceCode: `Källkod:`,
+    copyright: `Alla rättigheter förbehållna.`,
     foundBug: `Hittade du ett fel eller har en idé?`,
     sendFeedback: `Skicka feedback via e-post`,
     cancel: `Avbryt`,
@@ -988,6 +996,7 @@ function render() {
       <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">${t('aboutTitle')}</div>
       <div style="font-size:11.5px;line-height:1.6;color:#9FB6C9">
         <p><b style="color:#E8EFF5">Veneloki</b> ${esc(APP_VERSION)} · ${t('author')}: ${esc(APP_AUTHOR)} · ${esc(APP_CONTACT)}</p>
+        <p style="margin-top:4px;opacity:.85">© 2026 ${esc(APP_AUTHOR)}. ${t('copyright')}</p>
         <p style="margin-top:8px">${t('discLiability')}</p>
         <p style="margin-top:8px">${t('discSafety')}</p>
         <p style="margin-top:8px">${t('discPrivacy')}</p>
