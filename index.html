@@ -66,7 +66,9 @@ input, textarea, button, select { font-family: inherit; font-size: 16px; }
 .mh-label { font-size: 12px; color: #4A90B8; margin-top: 4px; }
 .boat-img { height: 40px; width: auto; display: block; border-radius: 7px; border: 1px solid rgba(74,144,184,0.35); object-fit: cover; }
 .fuel-panel { margin: 10px 14px; background: rgba(74,144,184,0.08); border: 1px solid rgba(74,144,184,0.2); border-radius: 12px; padding: 16px; }
-.tabs { display: flex; margin: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(74,144,184,0.15); overflow: hidden; }
+.topbar { position: sticky; top: 0; z-index: 20; background: #0B1E2D; }
+.tabbar { background: #0B1E2D; padding: 8px 14px; border-bottom: 1px solid rgba(74,144,184,0.18); }
+.tabs { display: flex; margin: 0; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(74,144,184,0.15); overflow: hidden; }
 .tab { flex: 1; padding: 12px 3px; border: none; cursor: pointer; font-size: 12.5px; background: transparent; color: #7A9AB5; border-right: 1px solid rgba(74,144,184,0.15); }
 .tab:last-child { border-right: none; }
 .tab.active { background: rgba(74,144,184,0.25); color: #4A90B8; font-weight: 700; }
@@ -163,10 +165,11 @@ input:focus, textarea:focus { border-color: #4A90B8; }
 .newseg-btn.on{background:#16374f;border-color:rgba(74,144,184,0.6);color:#fff}
 
   /* ===== dashboard header ===== */
-  .dash{ background:linear-gradient(180deg, rgba(20,40,58,.55), rgba(12,26,38,.35)); border-bottom:1px solid rgba(74,144,184,0.2); position:sticky; top:0; z-index:10; backdrop-filter:blur(10px); padding:10px 12px 12px; display:flex; flex-direction:column; }
+  .dash{ background:linear-gradient(180deg, rgba(20,40,58,.55), rgba(12,26,38,.35)); border-bottom:1px solid rgba(74,144,184,0.2); backdrop-filter:blur(10px); padding:10px 12px 12px; display:flex; flex-direction:column; }
   .dash-hd{ display:flex; align-items:center; gap:8px; }
-  .dash-name{ font-size:15px; font-weight:800; cursor:pointer; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dash-name{ font-size:15px; font-weight:800; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .dash-name .he{ color:#4A90B8; font-size:11px; opacity:.7; }
+  .dash-set{ flex:none; display:inline-flex; align-items:center; gap:4px; padding:0 10px; height:28px; border-radius:9px; border:1px solid rgba(74,144,184,0.3); background:rgba(255,255,255,0.05); color:#9fc0d8; font-size:11px; font-weight:700; cursor:pointer; white-space:nowrap; }
   .dash-tog{ flex:none; width:36px; height:30px; border-radius:9px; border:1px solid rgba(74,144,184,0.3); background:rgba(255,255,255,0.05); color:#9fc0d8; font-size:17px; cursor:pointer; line-height:1; }
   .dash-main{ display:flex; gap:10px; margin-top:10px; align-items:stretch; }
   .batt-wrap{ flex:none; width:72px; display:flex; flex-direction:column; align-items:center; }
@@ -234,6 +237,7 @@ const STR = {
     consAvg: `Kulutus ka.`,
     fullToFullShort: `täydeltä täydelle`,
     lastFueled: `Viimeksi tankattu`,
+    settings: `Asetukset`,
     infoShort: `ⓘ tiedot`,
     runSinceFull: (x)=>`ajettu ${x} h ed. täydestä`,
     boatInfo: `⚙️ Veneen tiedot`,
@@ -410,6 +414,7 @@ const STR = {
     consAvg: `Avg consumption`,
     fullToFullShort: `full-to-full`,
     lastFueled: `Last fueled`,
+    settings: `Settings`,
     infoShort: `ⓘ info`,
     runSinceFull: (x)=>`run ${x} h since last full`,
     boatInfo: `⚙️ Boat details`,
@@ -586,6 +591,7 @@ const STR = {
     consAvg: `Snittförbrukning`,
     fullToFullShort: `full-till-full`,
     lastFueled: `Senast tankad`,
+    settings: `Inställningar`,
     infoShort: `ⓘ info`,
     runSinceFull: (x)=>`kört ${x} h sedan full tank`,
     boatInfo: `⚙️ Båtinfo`,
@@ -945,13 +951,13 @@ function barChartSVG(data, color) {
 }
 
 function harborCounts() {
+  // Kaynti = saapuminen satamaan (etapin maaranpaa). Lahtosatamaa ei lasketa,
+  // joten ketjutetussa matkassa valisatama ei tule lasketuksi kahdesti.
   const map = {};
   legs.forEach(l => {
-    [l.from, l.to].forEach(p => {
-      const name = (p||"").trim();
-      if(!name || name==="?") return;
-      map[name] = (map[name]||0)+1;
-    });
+    const name = (l.to||"").trim();
+    if(!name || name==="?") return;
+    map[name] = (map[name]||0)+1;
   });
   return Object.entries(map).map(([name,count]) => ({name,count})).sort((a,b)=>b.count-a.count);
 }
@@ -974,9 +980,13 @@ function coordLookup(name) {
   return null;
 }
 function mapSVG() {
-  const counts = {};
-  harborCounts().forEach(h => { const c=coordLookup(h.name); if(c) counts[h.name]=(counts[h.name]||0)+h.count; });
-  const pts = Object.keys(counts).map(name => ({ name, c:coordLookup(name), n:counts[name] }));
+  const cnt = {}; harborCounts().forEach(h => cnt[h.name]=h.count);
+  const seen = {}; const pts = [];
+  legs.forEach(l => { [l.from, l.to].forEach(pp => {
+    const name=(pp||"").trim(); if(!name||name==="?"||seen[name]) return;
+    const c=coordLookup(name); if(!c) return;
+    seen[name]=1; pts.push({ name, c, n: cnt[name]||1 });
+  }); });
   if(!pts.length) return '<div style="font-size:13px;color:#7A9AB5">'+t('notEnoughPlaces')+'</div>';
   // Kiintea alueen rajaus (SW-saaristo) jotta taustahahmotelma pysyy paikallaan
   let latN=60.88, latS=59.74, lonW=19.78, lonE=22.50;
@@ -1058,7 +1068,8 @@ function render() {
     html = `
     <div class="dash">
       <div class="dash-hd">
-        <div class="dash-name" onclick="openSettings()">${esc(cfg.title)} <span class="he">\u270e</span></div>
+        <div class="dash-name">${esc(cfg.title)}</div>
+        <button class="dash-set" onclick="openSettings()">\u2699 ${t('settings')}</button>
         <button class="dash-tog" onclick="toggleHeader()">\u2303</button>
       </div>
       <div class="dash-main">
@@ -1099,9 +1110,10 @@ function render() {
     </div>`;
   }
 
-  // Asetuspaneeli (veneen tiedot) headerin alle
+  // Asetuspaneeli: renderoidaan kiinnitetyn topbarin alapuolelle (sisaltoon)
+  let settingsHTML = "";
   if(showSettings) {
-    html += `
+    settingsHTML = `
     <div class="fuel-panel">
       <div style="display:flex;align-items:center;margin-bottom:12px">
         <div style="font-size:14px;font-weight:700;color:#4A90B8">${t('boatInfo')}</div>
@@ -1119,6 +1131,7 @@ function render() {
       <input type="text" id="setSub" value="${esc(cfg.subtitle)}" placeholder="${t('phSubtitle')}">
       <label>${t('tankSize')}</label>
       <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="${t('phTank')}">
+      <!-- Venekuva piilotettu kojelaudasta. Palauta nayttamalla: poista taman lohkon kommenttimerkit.
       <label>${t('boatPhoto')}</label>
       <div class="flex-row">
         <button class="btn-set" style="flex:1" onclick="document.getElementById('photoFile').click()">${t('changePhoto')}</button>
@@ -1126,6 +1139,7 @@ function render() {
       </div>
       <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="photoChosen(this)">
       <div style="font-size:11px;color:#7A9AB5;margin-top:6px">${cfg.photo ? t('ownPhotoOn') : t('defaultPhotoOn')}</div>
+      -->
       <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">${t('saveSettingsBtn')}</button>
       <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 12px"></div>
       <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">${t('backup')}</div>
@@ -1155,14 +1169,17 @@ function render() {
   // Tankkauspaneeli headerin alle
   // (tankkauslomake siirretty Uusi-välilehdelle: newMode==="fuel")
 
-  html += `
+  html = `<div class="topbar">` + html + `
+  <div class="tabbar">
   <div class="tabs">
     <button class="tab ${tab==='loki'?'active':''}" onclick="setTab('loki')">${t('tabLog')}</button>
     <button class="tab ${tab==='uusi'?'active':''}" onclick="setTab('uusi')">${t('tabNew')}</button>
     <button class="tab ${tab==='huolto'?'active':''}" onclick="setTab('huolto')">${t('tabService')}</button>
     <button class="tab ${tab==='tilasto'?'active':''}" onclick="setTab('tilasto')">${t('tabStats')}</button>
   </div>
-  <div class="content">`;
+  </div>
+  </div>
+  <div class="content">` + settingsHTML;
 
   if(tab==="loki") {
     // Suodatin: kaikki / etapit / tankkaukset
