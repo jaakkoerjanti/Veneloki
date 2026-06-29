@@ -1,7 +1,7 @@
 // Veneloki – service worker
 // Tallentaa sovelluksen tiedostot laitteelle, jotta se toimii ilman nettiä.
 // Nosta versionumeroa aina kun päivität sovellusta, niin vanha välimuisti vaihtuu.
-const CACHE = "veneloki-v38";
+const CACHE = "veneloki-v41";
 
 const ASSETS = [
   "./",
@@ -37,6 +37,8 @@ self.addEventListener("activate", (e) => {
 // Jos verkko ei vastaa 2,5 s sisällä (heikko signaali) tai puuttuu (offline), tarjotaan välimuistista.
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Ohita muut originit (esim. kävijälaskuri) — selain hoitaa ne suoraan.
+  if (new URL(e.request.url).origin !== self.location.origin) return;
   const network = fetch(e.request).then((res) => {
     if (res && res.status === 200 && res.type === "basic") {
       const copy = res.clone();

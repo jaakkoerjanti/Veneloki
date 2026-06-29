@@ -11,6 +11,20 @@
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
 <link rel="icon" type="image/png" href="./icon-192.png">
 <title>Aquador 28C — Reittipäiväkirja</title>
+<!-- Anonyymi, evästeetön kävijälaskuri (GoatCounter). -->
+<script>
+  (function(){
+    try {
+      if (navigator.onLine) {
+        var s = document.createElement("script");
+        s.async = true;
+        s.setAttribute("data-goatcounter", "https://veneloki.goatcounter.com/count");
+        s.src = "https://gc.zgo.at/count.js";
+        document.head.appendChild(s);
+      }
+    } catch(e) {}
+  })();
+</script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 body { background: linear-gradient(160deg,#0B1E2D,#0F2940,#0B1E2D); min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #E8EFF5; font-size: 16px; }
@@ -151,6 +165,503 @@ const APP_VERSION = "1.0 (2026)";
 const APP_AUTHOR = "Jaakko Erjanti";
 const APP_CONTACT = "jaakko@erjanti.fi · 050 550 4696";
 
+/* ---- i18n (FI / EN / SV) ---- */
+let lang = "fi";
+const STR = {
+  fi: {
+    tabLog: `📋 Loki`,
+    tabNew: `➕ Uusi`,
+    tabService: `🔧 Huolto`,
+    tabStats: `📊 Tilastot`,
+    runTime: `ajoaikaa`,
+    remaining: `jäljellä`,
+    infoShort: `ⓘ tiedot`,
+    runSinceFull: (x)=>`ajettu ${x} h ed. täydestä`,
+    boatInfo: `⚙️ Veneen tiedot`,
+    close: `Sulje`,
+    language: `Kieli`,
+    boatName: `Veneen nimi`,
+    phBoatName: `esim. Aquador 28C`,
+    subtitle: `Alaotsikko`,
+    phSubtitle: `esim. Reittipäiväkirja`,
+    tankSize: `Tankin koko (L)`,
+    phTank: `esim. 350`,
+    boatPhoto: `Veneen kuva`,
+    changePhoto: `📷 Vaihda kuva`,
+    defaultPhoto: `↩︎ Oletus`,
+    ownPhotoOn: `Oma kuva käytössä (vaihtuu heti valittaessa).`,
+    defaultPhotoOn: `Käytössä oletuskuva.`,
+    saveSettingsBtn: `💾 Tallenna`,
+    backup: `💾 Varmuuskopio`,
+    exportBtn: `⬇️ Vie tiedot`,
+    importBtn: `⬆️ Tuo tiedot`,
+    backupHelp: `Vie tallentaa kaikki tiedot tiedostoon (talteen tai toiselle laitteelle). Tuo korvaa laitteen nykyiset tiedot tiedoston tiedoilla.`,
+    aboutTitle: `ℹ️ Tietoja, vastuuvapaus ja yksityisyys`,
+    author: `Tekijä`,
+    discLiability: `<b style="color:#E8EFF5">Vastuuvapaus.</b> Sovellus tarjotaan sellaisenaan ("as is") ilman minkäänlaista takuuta. Se voi sisältää virheitä eikä välttämättä aina toimi oikein. Polttoainemäärä, kulutus, matkat ja kustannukset ovat <b>arvioita</b>, jotka perustuvat syöttämiisi tietoihin ja asetuksiin — ne eivät ole tarkkoja mittauksia. Tekijä ei vastaa mistään suorista tai välillisistä vahingoista, menetyksistä tai seurauksista, jotka aiheutuvat sovelluksen käytöstä tai virhetoiminnasta.`,
+    discSafety: `<b style="color:#E8EFF5">Turvallisuus.</b> Älä koskaan tee polttoaineen riittävyyttä tai navigointia koskevia päätöksiä pelkästään tämän sovelluksen perusteella. Pidä aina riittävä polttoainereservi, käytä ajantasaisia merikarttoja ja noudata hyvää merimiestapaa. Sovellus ei korvaa veneen mittareita, karttoja eikä omaa harkintaa.`,
+    discPrivacy: `<b style="color:#E8EFF5">Yksityisyys.</b> Veneen tiedot, etapit ja tankkaukset tallennetaan vain tämän laitteen selaimeen (localStorage) — niitä ei lähetetä minnekään. Sivu käyttää kävijämäärän laskentaan GoatCounter-palvelua, joka kirjaa anonyymin sivulatauksen ilman evästeitä tai henkilötietoja, ja vain kun laite on verkossa. Tietojen säilyminen on omalla vastuullasi — ota säännöllisesti varmuuskopio. Selaimen "tyhjennä sivuston tiedot" -toiminto poistaa kaikki tiedot pysyvästi.`,
+    sourceCode: `Lähdekoodi:`,
+    foundBug: `Löysitkö virheen tai kehitysidean?`,
+    sendFeedback: `Lähetä palautetta sähköpostilla`,
+    cancel: `Peruuta`,
+    editFueling: `Muokkaa tankkausta`,
+    logFueling: `Kirjaa tankkaus`,
+    date: `Päivämäärä`,
+    liters: `Litraa`,
+    location: `Paikka`,
+    phLocation: `esim. satama`,
+    phLiters: `esim. 150`,
+    meterH: `Mittari (h)`,
+    eg: `esim.`,
+    pricePerL: `Hinta €/L`,
+    phPrice: `esim. 1.95`,
+    totalEur: `Yhteensä €`,
+    phTotal: `esim. 292.50`,
+    fullTankCheck: (tank)=>`Tankki täyteen (${tank} L)`,
+    fullTankSet: `Tankki asetetaan täyteen. Mittarilukema pakollinen.`,
+    topUpHint: `Lisätankkaus: litrat lisätään tankin nykyiseen tasoon.`,
+    fillLitersHint: `Täytä litrat ja joko €/L tai yhteensä €.`,
+    saveChanges: `Tallenna muutokset`,
+    saveFueling: `Tallenna tankkaus`,
+    all: `Kaikki`,
+    legs: `Etapit`,
+    fuelings: `⛽ Tankkaukset`,
+    noFuelings: `Ei tankkauksia vielä`,
+    noLegs: `Ei etappeja vielä`,
+    noEntries: `Ei merkintöjä vielä`,
+    fuelingCard: `⛽ Tankkaus`,
+    full: `täysi`,
+    estimate: `arvio`,
+    duration: `kesto`,
+    editLeg: `Muokkaa etappia`,
+    newLeg: `Uusi etappi`,
+    fromHarbor: `Lähtösatama`,
+    toHarbor: `Määräsatama`,
+    meterStart: `Mittari lähtö (h)`,
+    meterEnd: `Mittari tulo (h)`,
+    phMeterEnd: `esim. 588.5`,
+    consPerLeg: `Kulutus — etappikohtainen (täytä toinen tai jätä tyhjäksi)`,
+    lhHint: `L/h (tunnit × kulutus)`,
+    lnmHint: `L/nm (matka × kulutus)`,
+    priorityNote: (d)=>`Prioriteetti: L/h ensin, sitten L/nm, sitten globaali oletus (${d}).`,
+    distanceNm: `Kuljettu matka (nm) — valinnainen`,
+    phAutoCalc: `Tyhjä = lasketaan automaattisesti`,
+    notes: `Muistiinpanot`,
+    phNotes: `Sää, nähtävyydet, huomiot...`,
+    saveLegBtn: `Tallenna etappi`,
+    realConsTitle: `Todellinen kulutus & kustannukset`,
+    addFuelingsHint: `Lisää tankkauksia (näpäytä loki-sivun polttoainemittaria), niin näet todellisen kulutuksen ja kustannukset käyntiaikoihin ja matkaan suhteutettuna.`,
+    fueledTotal: `Tankattu yhteensä`,
+    paidTotal: `Maksettu yhteensä`,
+    avgPrice: `Keskihinta`,
+    engineHours: `Käyntitunnit`,
+    distance: `Matka`,
+    actualCons: `Todellinen kulutus`,
+    consPerNm: `Kulutus / merimaili`,
+    costPerH: `Kustannus / tunti`,
+    costPerNm: `Kustannus / merimaili`,
+    allSeasons: `Kaikki kaudet yhteensä.`,
+    seasonOf: (y)=>`Kausi ${y}.`,
+    realConsExplain: `Todellinen kulutus = tankatut litrat ÷ käyntitunnit. Tarkin, kun loki ja tankkaukset kattavat saman jakson.`,
+    bigLegs: `Etappeja`,
+    pcs: `kpl`,
+    totalDistance: `Yhteismatka`,
+    engineHoursShort: `Moottorit.`,
+    meterReading: `Mittarilukema`,
+    consSetting: `Kulutusasetus`,
+    lhDefault: `L/h oletuskulutus`,
+    lnmAlt: `L/nm vaihtoehto`,
+    consSettingNote: `Etapin kulutus lasketaan ensisijaisesti etapille annetusta L/h:sta. Jos etapille ei anneta L/h:ta ja L/nm on asetettu (> 0), käytetään matkaa × L/nm. Muuten oletus L/h.`,
+    averages: `Keskiluvut`,
+    consPerH: `Kulutus / tunti`,
+    rangeHoursOnTank: `Tankilla käyntiaikaa`,
+    rangeNmOnTank: `Tankilla matkaa`,
+    consFromIntervals: `Kulutus tankkausväleistä`,
+    needTwoFulls: `Tarvitaan vähintään 2 <b>täyteen</b>-tankkausta mittarilukemineen. Kulutus lasketaan täyteen-tankkausten väliltä: tankatut litrat ÷ käyntiajan erotus.`,
+    lastInterval: `Viim. tankkausväli`,
+    allFullIntervals: `Kaikki täydet välit`,
+    fullToFullNote: `Lasketaan täydeltä täydelle (vain täyteen-tankkaukset). Tämä on tarkin todellinen kulutus.`,
+    fuelingLog: `Tankkausloki`,
+    fuelingsAndCosts: `Tankkaukset & kustannukset`,
+    month: `Kuukausi`,
+    year: `Vuosi`,
+    fueledLiters: `Tankatut litrat (L)`,
+    costsEur: `Kustannukset (€)`,
+    topHarbors: `Eniten käydyt satamat`,
+    mapRoutes: `Kartta & reitit`,
+    mapNote: `Pisteen koko kertoo käyntien määrän. Koordinaatit ovat likimääräisiä — voit tarkentaa niitä koodin GAZ-taulusta.`,
+    noData: `Ei dataa vielä.`,
+    notEnoughPlaces: `Ei tarpeeksi paikkoja kartalle (lisää koordinaatteja tai etappeja).`,
+    editService: `Muokkaa huoltoa`,
+    newService: `Uusi huolto / korjaus`,
+    serviceDesc: `Kuvaus (osat, öljyt, työ…)`,
+    phServiceDesc: `esim.&#10;- Vaihdettu impelleri&#10;- Moottoriöljy + suodatin&#10;- Vaihteistoöljy`,
+    priceEur: `Hinta €`,
+    phPrice250: `esim. 250`,
+    doneBy: `Tekijä`,
+    phDoneBy: `esim. itse / huoltamo`,
+    saveServiceBtn: `Tallenna huolto`,
+    addService: `➕ Lisää huolto / korjaus`,
+    servicesLogged: `Huoltoja kirjattu`,
+    costsTotal: `Kustannukset yhteensä`,
+    serviceHistory: `Huoltohistoria & korjaukset`,
+    noServices: `Ei huoltomerkintöjä vielä. Lisää ensimmäinen yllä olevalla painikkeella.`,
+    service: `Huolto`,
+    preview: `ESIKATSELU`,
+    tankAfter: `Tankki jälkeen:`,
+    minEngineTime: (m)=>`${m} min käyntiaikaa`,
+    confirmDelService: `Poistetaanko tämä huoltomerkintä?`,
+    confirmDelLeg: `Poistetaanko tämä etappi?`,
+    confirmDelFueling: `Poistetaanko tämä tankkaus?`,
+    errServiceDesc: `Anna huollon kuvaus.`,
+    errPhotoProcess: `Kuvan käsittely epäonnistui.`,
+    errPhotoRead: `Kuvaa ei voitu lukea.`,
+    errNotBackup: `Tämä tiedosto ei näytä olevan Veneloki-varmuuskopio.`,
+    confirmImport: `Tuonti korvaa laitteen nykyiset tiedot tiedoston tiedoilla. Jatketaanko?`,
+    importOk: `Tiedot tuotu onnistuneesti.`,
+    errImport: `Tuonti epäonnistui: tiedostoa ei voitu lukea.`,
+    approxTotal: (v)=>`≈ yhteensä ${v} €`,
+    errEnterLiters: `❌ Anna tankatut litrat.`,
+    errFullNeedsMeter: `❌ Täysi tankki vaatii mittarilukeman.`,
+    errFromMissing: `lähtösatama puuttuu`,
+    errToMissing: `määräsatama puuttuu`,
+    errMeterStartMissing: `mittari lähtö puuttuu`,
+    errMeterEndMissing: `mittari tulo puuttuu`,
+    errEndGtStart: `❌ Tulo pitää olla suurempi kuin lähtö!`,
+    routeLog: `Reittipäiväkirja`,
+  },
+  en: {
+    tabLog: `📋 Log`,
+    tabNew: `➕ New`,
+    tabService: `🔧 Service`,
+    tabStats: `📊 Stats`,
+    runTime: `run time`,
+    remaining: `remaining`,
+    infoShort: `ⓘ info`,
+    runSinceFull: (x)=>`run ${x} h since last full`,
+    boatInfo: `⚙️ Boat details`,
+    close: `Close`,
+    language: `Language`,
+    boatName: `Boat name`,
+    phBoatName: `e.g. Aquador 28C`,
+    subtitle: `Subtitle`,
+    phSubtitle: `e.g. Route log`,
+    tankSize: `Tank size (L)`,
+    phTank: `e.g. 350`,
+    boatPhoto: `Boat photo`,
+    changePhoto: `📷 Change photo`,
+    defaultPhoto: `↩︎ Default`,
+    ownPhotoOn: `Custom photo in use (changes immediately).`,
+    defaultPhotoOn: `Default photo in use.`,
+    saveSettingsBtn: `💾 Save`,
+    backup: `💾 Backup`,
+    exportBtn: `⬇️ Export`,
+    importBtn: `⬆️ Import`,
+    backupHelp: `Export saves all data to a file (for safekeeping or another device). Import replaces this device's data with the file's data.`,
+    aboutTitle: `ℹ️ About, disclaimer & privacy`,
+    author: `Author`,
+    discLiability: `<b style="color:#E8EFF5">Disclaimer.</b> The app is provided "as is" without any warranty. It may contain errors and may not always work correctly. Fuel level, consumption, distances and costs are <b>estimates</b> based on the data and settings you enter — they are not exact measurements. The author is not liable for any direct or indirect damage, loss or consequences arising from use of the app or its malfunction.`,
+    discSafety: `<b style="color:#E8EFF5">Safety.</b> Never make decisions about fuel sufficiency or navigation based on this app alone. Always keep an adequate fuel reserve, use up-to-date nautical charts and follow good seamanship. The app does not replace the boat's gauges, charts or your own judgement.`,
+    discPrivacy: `<b style="color:#E8EFF5">Privacy.</b> Your boat details, legs and fuelings are stored only in this device's browser (localStorage) — they are never sent anywhere. The page uses GoatCounter to count visits, which records an anonymous page view without cookies or personal data, and only when the device is online. Retaining your data is your own responsibility — back up regularly. The browser's "clear site data" function deletes all data permanently.`,
+    sourceCode: `Source code:`,
+    foundBug: `Found a bug or have an idea?`,
+    sendFeedback: `Send feedback by email`,
+    cancel: `Cancel`,
+    editFueling: `Edit fueling`,
+    logFueling: `Log fueling`,
+    date: `Date`,
+    liters: `Liters`,
+    location: `Location`,
+    phLocation: `e.g. harbour`,
+    phLiters: `e.g. 150`,
+    meterH: `Hour meter (h)`,
+    eg: `e.g.`,
+    pricePerL: `Price €/L`,
+    phPrice: `e.g. 1.95`,
+    totalEur: `Total €`,
+    phTotal: `e.g. 292.50`,
+    fullTankCheck: (tank)=>`Fill tank (${tank} L)`,
+    fullTankSet: `Tank set to full. Hour meter required.`,
+    topUpHint: `Top-up: liters are added to the current tank level.`,
+    fillLitersHint: `Enter liters and either €/L or total €.`,
+    saveChanges: `Save changes`,
+    saveFueling: `Save fueling`,
+    all: `All`,
+    legs: `Legs`,
+    fuelings: `⛽ Fuelings`,
+    noFuelings: `No fuelings yet`,
+    noLegs: `No legs yet`,
+    noEntries: `No entries yet`,
+    fuelingCard: `⛽ Fueling`,
+    full: `full`,
+    estimate: `est.`,
+    duration: `duration`,
+    editLeg: `Edit leg`,
+    newLeg: `New leg`,
+    fromHarbor: `Departure`,
+    toHarbor: `Destination`,
+    meterStart: `Meter start (h)`,
+    meterEnd: `Meter end (h)`,
+    phMeterEnd: `e.g. 588.5`,
+    consPerLeg: `Consumption — per leg (fill one or leave empty)`,
+    lhHint: `L/h (hours × rate)`,
+    lnmHint: `L/nm (distance × rate)`,
+    priorityNote: (d)=>`Priority: L/h first, then L/nm, then global default (${d}).`,
+    distanceNm: `Distance travelled (nm) — optional`,
+    phAutoCalc: `Empty = calculated automatically`,
+    notes: `Notes`,
+    phNotes: `Weather, sights, notes...`,
+    saveLegBtn: `Save leg`,
+    realConsTitle: `Actual consumption & costs`,
+    addFuelingsHint: `Add fuelings (tap the fuel gauge on the log page) to see actual consumption and costs relative to engine hours and distance.`,
+    fueledTotal: `Fueled total`,
+    paidTotal: `Paid total`,
+    avgPrice: `Average price`,
+    engineHours: `Engine hours`,
+    distance: `Distance`,
+    actualCons: `Actual consumption`,
+    consPerNm: `Consumption / NM`,
+    costPerH: `Cost / hour`,
+    costPerNm: `Cost / NM`,
+    allSeasons: `All seasons combined.`,
+    seasonOf: (y)=>`Season ${y}.`,
+    realConsExplain: `Actual consumption = liters fueled ÷ engine hours. Most accurate when the log and fuelings cover the same period.`,
+    bigLegs: `Legs`,
+    pcs: `pcs`,
+    totalDistance: `Total distance`,
+    engineHoursShort: `Engine hrs`,
+    meterReading: `Hour meter`,
+    consSetting: `Consumption setting`,
+    lhDefault: `L/h default rate`,
+    lnmAlt: `L/nm alternative`,
+    consSettingNote: `A leg's consumption is calculated primarily from the leg's L/h. If no L/h is given for the leg and L/nm is set (> 0), distance × L/nm is used. Otherwise the default L/h.`,
+    averages: `Averages`,
+    consPerH: `Consumption / hour`,
+    rangeHoursOnTank: `Engine time on a tank`,
+    rangeNmOnTank: `Range on a tank`,
+    consFromIntervals: `Consumption from fueling intervals`,
+    needTwoFulls: `At least 2 <b>full-tank</b> fuelings with hour readings are needed. Consumption is calculated between full-tank fuelings: liters fueled ÷ engine-hour difference.`,
+    lastInterval: `Last interval`,
+    allFullIntervals: `All full intervals`,
+    fullToFullNote: `Calculated full-to-full (full-tank fuelings only). This is the most accurate actual consumption.`,
+    fuelingLog: `Fueling log`,
+    fuelingsAndCosts: `Fuelings & costs`,
+    month: `Month`,
+    year: `Year`,
+    fueledLiters: `Liters fueled (L)`,
+    costsEur: `Costs (€)`,
+    topHarbors: `Most visited harbours`,
+    mapRoutes: `Map & routes`,
+    mapNote: `Dot size shows the number of visits. Coordinates are approximate — you can refine them in the code's GAZ table.`,
+    noData: `No data yet.`,
+    notEnoughPlaces: `Not enough places for the map (add coordinates or legs).`,
+    editService: `Edit service`,
+    newService: `New service / repair`,
+    serviceDesc: `Description (parts, oils, work…)`,
+    phServiceDesc: `e.g.&#10;- Replaced impeller&#10;- Engine oil + filter&#10;- Gear oil`,
+    priceEur: `Price €`,
+    phPrice250: `e.g. 250`,
+    doneBy: `Done by`,
+    phDoneBy: `e.g. self / workshop`,
+    saveServiceBtn: `Save service`,
+    addService: `➕ Add service / repair`,
+    servicesLogged: `Services logged`,
+    costsTotal: `Total costs`,
+    serviceHistory: `Service history & repairs`,
+    noServices: `No service entries yet. Add the first one with the button above.`,
+    service: `Service`,
+    preview: `PREVIEW`,
+    tankAfter: `Tank after:`,
+    minEngineTime: (m)=>`${m} min engine time`,
+    confirmDelService: `Delete this service entry?`,
+    confirmDelLeg: `Delete this leg?`,
+    confirmDelFueling: `Delete this fueling?`,
+    errServiceDesc: `Enter a service description.`,
+    errPhotoProcess: `Image processing failed.`,
+    errPhotoRead: `Could not read the image.`,
+    errNotBackup: `This file does not appear to be a Veneloki backup.`,
+    confirmImport: `Import will replace this device's data with the file's data. Continue?`,
+    importOk: `Data imported successfully.`,
+    errImport: `Import failed: the file could not be read.`,
+    approxTotal: (v)=>`≈ total ${v} €`,
+    errEnterLiters: `❌ Enter the liters fueled.`,
+    errFullNeedsMeter: `❌ A full tank requires an hour reading.`,
+    errFromMissing: `departure harbour missing`,
+    errToMissing: `destination harbour missing`,
+    errMeterStartMissing: `meter start missing`,
+    errMeterEndMissing: `meter end missing`,
+    errEndGtStart: `❌ End must be greater than start!`,
+    routeLog: `Route log`,
+  },
+  sv: {
+    tabLog: `📋 Logg`,
+    tabNew: `➕ Ny`,
+    tabService: `🔧 Service`,
+    tabStats: `📊 Statistik`,
+    runTime: `körtid`,
+    remaining: `kvar`,
+    infoShort: `ⓘ info`,
+    runSinceFull: (x)=>`kört ${x} h sedan full tank`,
+    boatInfo: `⚙️ Båtinfo`,
+    close: `Stäng`,
+    language: `Språk`,
+    boatName: `Båtens namn`,
+    phBoatName: `t.ex. Aquador 28C`,
+    subtitle: `Underrubrik`,
+    phSubtitle: `t.ex. Ruttlogg`,
+    tankSize: `Tankstorlek (L)`,
+    phTank: `t.ex. 350`,
+    boatPhoto: `Båtbild`,
+    changePhoto: `📷 Byt bild`,
+    defaultPhoto: `↩︎ Standard`,
+    ownPhotoOn: `Egen bild används (byts direkt).`,
+    defaultPhotoOn: `Standardbild används.`,
+    saveSettingsBtn: `💾 Spara`,
+    backup: `💾 Säkerhetskopia`,
+    exportBtn: `⬇️ Exportera`,
+    importBtn: `⬆️ Importera`,
+    backupHelp: `Exportera sparar alla data till en fil (för förvaring eller annan enhet). Importera ersätter enhetens data med filens data.`,
+    aboutTitle: `ℹ️ Om, ansvarsfriskrivning & integritet`,
+    author: `Skapare`,
+    discLiability: `<b style="color:#E8EFF5">Ansvarsfriskrivning.</b> Appen tillhandahålls i befintligt skick ("as is") utan någon garanti. Den kan innehålla fel och fungerar inte alltid korrekt. Bränslemängd, förbrukning, sträckor och kostnader är <b>uppskattningar</b> baserade på de uppgifter och inställningar du anger — de är inte exakta mätningar. Skaparen ansvarar inte för några direkta eller indirekta skador, förluster eller följder som uppstår vid användning av appen eller felfunktion.`,
+    discSafety: `<b style="color:#E8EFF5">Säkerhet.</b> Fatta aldrig beslut om bränslets tillräcklighet eller navigering enbart utifrån denna app. Håll alltid en tillräcklig bränslereserv, använd uppdaterade sjökort och följ gott sjömanskap. Appen ersätter inte båtens instrument, sjökort eller ditt eget omdöme.`,
+    discPrivacy: `<b style="color:#E8EFF5">Integritet.</b> Båtens uppgifter, etapper och tankningar lagras enbart i denna enhets webbläsare (localStorage) — de skickas aldrig någonstans. Sidan använder GoatCounter för att räkna besök, vilket registrerar en anonym sidvisning utan cookies eller personuppgifter, och endast när enheten är online. Att bevara dina data är ditt eget ansvar — säkerhetskopiera regelbundet. Webbläsarens "rensa webbplatsdata" raderar alla data permanent.`,
+    sourceCode: `Källkod:`,
+    foundBug: `Hittade du ett fel eller har en idé?`,
+    sendFeedback: `Skicka feedback via e-post`,
+    cancel: `Avbryt`,
+    editFueling: `Redigera tankning`,
+    logFueling: `Logga tankning`,
+    date: `Datum`,
+    liters: `Liter`,
+    location: `Plats`,
+    phLocation: `t.ex. hamn`,
+    phLiters: `t.ex. 150`,
+    meterH: `Timräknare (h)`,
+    eg: `t.ex.`,
+    pricePerL: `Pris €/L`,
+    phPrice: `t.ex. 1.95`,
+    totalEur: `Totalt €`,
+    phTotal: `t.ex. 292.50`,
+    fullTankCheck: (tank)=>`Fyll tanken (${tank} L)`,
+    fullTankSet: `Tanken sätts till full. Timräknare krävs.`,
+    topUpHint: `Påfyllning: litrarna läggs till tankens nuvarande nivå.`,
+    fillLitersHint: `Ange liter och antingen €/L eller totalt €.`,
+    saveChanges: `Spara ändringar`,
+    saveFueling: `Spara tankning`,
+    all: `Alla`,
+    legs: `Etapper`,
+    fuelings: `⛽ Tankningar`,
+    noFuelings: `Inga tankningar än`,
+    noLegs: `Inga etapper än`,
+    noEntries: `Inga poster än`,
+    fuelingCard: `⛽ Tankning`,
+    full: `full`,
+    estimate: `uppsk.`,
+    duration: `längd`,
+    editLeg: `Redigera etapp`,
+    newLeg: `Ny etapp`,
+    fromHarbor: `Avgångshamn`,
+    toHarbor: `Destinationshamn`,
+    meterStart: `Timräknare start (h)`,
+    meterEnd: `Timräknare slut (h)`,
+    phMeterEnd: `t.ex. 588.5`,
+    consPerLeg: `Förbrukning — per etapp (fyll i en eller lämna tom)`,
+    lhHint: `L/h (timmar × förbrukning)`,
+    lnmHint: `L/nm (sträcka × förbrukning)`,
+    priorityNote: (d)=>`Prioritet: L/h först, sedan L/nm, sedan globalt standard (${d}).`,
+    distanceNm: `Tillryggalagd sträcka (nm) — valfritt`,
+    phAutoCalc: `Tom = beräknas automatiskt`,
+    notes: `Anteckningar`,
+    phNotes: `Väder, sevärdheter, noteringar...`,
+    saveLegBtn: `Spara etapp`,
+    realConsTitle: `Faktisk förbrukning & kostnader`,
+    addFuelingsHint: `Lägg till tankningar (tryck på bränslemätaren på loggsidan) för att se faktisk förbrukning och kostnader i förhållande till motortimmar och sträcka.`,
+    fueledTotal: `Tankat totalt`,
+    paidTotal: `Betalt totalt`,
+    avgPrice: `Snittpris`,
+    engineHours: `Motortimmar`,
+    distance: `Sträcka`,
+    actualCons: `Faktisk förbrukning`,
+    consPerNm: `Förbrukning / sjömil`,
+    costPerH: `Kostnad / timme`,
+    costPerNm: `Kostnad / sjömil`,
+    allSeasons: `Alla säsonger totalt.`,
+    seasonOf: (y)=>`Säsong ${y}.`,
+    realConsExplain: `Faktisk förbrukning = tankade liter ÷ motortimmar. Mest exakt när loggen och tankningarna täcker samma period.`,
+    bigLegs: `Etapper`,
+    pcs: `st`,
+    totalDistance: `Total sträcka`,
+    engineHoursShort: `Motortim.`,
+    meterReading: `Timräknare`,
+    consSetting: `Förbrukningsinställning`,
+    lhDefault: `L/h standardförbr.`,
+    lnmAlt: `L/nm alternativ`,
+    consSettingNote: `En etapps förbrukning beräknas i första hand från etappens L/h. Om ingen L/h anges för etappen och L/nm är satt (> 0) används sträcka × L/nm. Annars standard L/h.`,
+    averages: `Medeltal`,
+    consPerH: `Förbrukning / timme`,
+    rangeHoursOnTank: `Körtid på en tank`,
+    rangeNmOnTank: `Räckvidd på en tank`,
+    consFromIntervals: `Förbrukning mellan tankningar`,
+    needTwoFulls: `Minst 2 <b>fulltank</b>-tankningar med timavläsningar behövs. Förbrukningen beräknas mellan fulltank-tankningar: tankade liter ÷ skillnad i motortimmar.`,
+    lastInterval: `Senaste intervall`,
+    allFullIntervals: `Alla fulla intervall`,
+    fullToFullNote: `Beräknas full-till-full (endast fulltank-tankningar). Detta är den mest exakta faktiska förbrukningen.`,
+    fuelingLog: `Tankningslogg`,
+    fuelingsAndCosts: `Tankningar & kostnader`,
+    month: `Månad`,
+    year: `År`,
+    fueledLiters: `Tankade liter (L)`,
+    costsEur: `Kostnader (€)`,
+    topHarbors: `Mest besökta hamnar`,
+    mapRoutes: `Karta & rutter`,
+    mapNote: `Punktstorleken visar antal besök. Koordinaterna är ungefärliga — du kan finjustera dem i kodens GAZ-tabell.`,
+    noData: `Inga data än.`,
+    notEnoughPlaces: `Inte tillräckligt med platser för kartan (lägg till koordinater eller etapper).`,
+    editService: `Redigera service`,
+    newService: `Ny service / reparation`,
+    serviceDesc: `Beskrivning (delar, oljor, arbete…)`,
+    phServiceDesc: `t.ex.&#10;- Bytt impeller&#10;- Motorolja + filter&#10;- Växelolja`,
+    priceEur: `Pris €`,
+    phPrice250: `t.ex. 250`,
+    doneBy: `Utförd av`,
+    phDoneBy: `t.ex. själv / verkstad`,
+    saveServiceBtn: `Spara service`,
+    addService: `➕ Lägg till service / reparation`,
+    servicesLogged: `Servicar loggade`,
+    costsTotal: `Totala kostnader`,
+    serviceHistory: `Servicehistorik & reparationer`,
+    noServices: `Inga serviceposter än. Lägg till den första med knappen ovan.`,
+    service: `Service`,
+    preview: `FÖRHANDSVISNING`,
+    tankAfter: `Tank efter:`,
+    minEngineTime: (m)=>`${m} min körtid`,
+    confirmDelService: `Radera denna servicepost?`,
+    confirmDelLeg: `Radera denna etapp?`,
+    confirmDelFueling: `Radera denna tankning?`,
+    errServiceDesc: `Ange en servicebeskrivning.`,
+    errPhotoProcess: `Bildbehandlingen misslyckades.`,
+    errPhotoRead: `Bilden kunde inte läsas.`,
+    errNotBackup: `Den här filen verkar inte vara en Veneloki-säkerhetskopia.`,
+    confirmImport: `Importen ersätter enhetens data med filens data. Fortsätta?`,
+    importOk: `Data importerades.`,
+    errImport: `Importen misslyckades: filen kunde inte läsas.`,
+    approxTotal: (v)=>`≈ totalt ${v} €`,
+    errEnterLiters: `❌ Ange tankade liter.`,
+    errFullNeedsMeter: `❌ Full tank kräver en timavläsning.`,
+    errFromMissing: `avgångshamn saknas`,
+    errToMissing: `destinationshamn saknas`,
+    errMeterStartMissing: `timräknare start saknas`,
+    errMeterEndMissing: `timräknare slut saknas`,
+    errEndGtStart: `❌ Slut måste vara större än start!`,
+    routeLog: `Ruttlogg`,
+  }
+};
+function t(k){ const d=STR[lang]||STR.fi; let v=(d&&k in d)?d[k]:STR.fi[k]; if(v==null) return k; if(typeof v==="function"){ return v.apply(null, Array.prototype.slice.call(arguments,1)); } return v; }
+function setLang(l){ if(!STR[l]) return; lang=l; try{localStorage.setItem("vl5-lang",l);}catch(e){} try{document.documentElement.lang=l;}catch(e){} render(); }
+function initLang(){ let s=null; try{s=localStorage.getItem("vl5-lang");}catch(e){} if(s&&STR[s]){ lang=s; } else { const n=(navigator.language||"fi").toLowerCase(); lang=n.indexOf("sv")===0?"sv":n.indexOf("en")===0?"en":"fi"; } try{document.documentElement.lang=lang;}catch(e){} }
+
 const HIST = [
   {id:"h1",date:"2025-01-01",from:"Jurmo",to:"Korpoström",mhStart:"534.1",mhEnd:"535.9",nm:"",notes:"Tankattu 132L ennen lähtöä",fuelManual:""},
   {id:"h2",date:"2025-01-01",from:"Korpoström",to:"?",mhStart:"535.9",mhEnd:"537.6",nm:"",notes:"",fuelManual:""},
@@ -203,13 +714,14 @@ let legs = [], fuelings = [], maint = [], fuel = 350, cons = DEF_CONS, consNm = 
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
+  initLang();
   try { const v = localStorage.getItem("vl5-legs"); if(v) legs = JSON.parse(v); else legs = JSON.parse(JSON.stringify(HIST)); } catch { legs = JSON.parse(JSON.stringify(HIST)); }
   try { const v = localStorage.getItem("vl5-fuel"); if(v) fuel = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-cons"); if(v) cons = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-consnm"); if(v) consNm = parseFloat(v)||0; } catch {}
   try { const v = localStorage.getItem("vl5-fuelings"); if(v) fuelings = JSON.parse(v); else fuelings = JSON.parse(JSON.stringify(HIST_FUEL)); } catch { fuelings = JSON.parse(JSON.stringify(HIST_FUEL)); }
   try { const v = localStorage.getItem("vl5-maint"); if(v) maint = JSON.parse(v); } catch {}
-  try { const v = localStorage.getItem("vl5-cfg"); if(v) cfg = Object.assign(cfg, JSON.parse(v)); } catch {}
+  try { const v = localStorage.getItem("vl5-cfg"); if(v) cfg = Object.assign(cfg, JSON.parse(v)); else cfg.subtitle = t("routeLog"); } catch {}
   TANK = parseNum(cfg.tank) || 350;
 }
 
@@ -306,6 +818,13 @@ function hoursSinceFull() {
   return Math.max(0, latestMh() - refMh);
 }
 function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
+function lastHarbor() {
+  if(!legs.length) return "";
+  const sorted = [...legs].sort((a,b) =>
+    ((Date.parse((a.date||"")+"T00:00:00")||0) - (Date.parse((b.date||"")+"T00:00:00")||0))
+    || (parseNum(a.mhEnd) - parseNum(b.mhEnd)));
+  return sorted[sorted.length-1].to || "";
+}
 function itemKey(date, sub) { const t = Date.parse((date||"")+"T00:00:00"); return (isNaN(t)?0:t) + (sub||0); }
 
 // --- Tilastokaaviot ---
@@ -343,7 +862,7 @@ function periodLabel(key) {
   const [y,m] = key.split("-"); return parseInt(m)+"/"+y.slice(2); // 7/24
 }
 function barChartSVG(data, color) {
-  if(!data.length) return '<div style="font-size:13px;color:#7A9AB5">Ei dataa vielä.</div>';
+  if(!data.length) return '<div style="font-size:13px;color:#7A9AB5">'+t('noData')+'</div>';
   const n=data.length, bw=26, gap=12, padL=6, padR=6, padT=18, padB=22, H=120;
   const cw = padL+padR + n*bw + (n-1)*gap;
   const max = Math.max(...data.map(d=>d.value), 1);
@@ -394,7 +913,7 @@ function mapSVG() {
   const counts = {};
   harborCounts().forEach(h => { const c=coordLookup(h.name); if(c) counts[h.name]=(counts[h.name]||0)+h.count; });
   const pts = Object.keys(counts).map(name => ({ name, c:coordLookup(name), n:counts[name] }));
-  if(pts.length<2) return '<div style="font-size:13px;color:#7A9AB5">Ei tarpeeksi paikkoja kartalle (lisää koordinaatteja tai etappeja).</div>';
+  if(pts.length<2) return '<div style="font-size:13px;color:#7A9AB5">'+t('notEnoughPlaces')+'</div>';
   let minLat=99,maxLat=-99,minLon=999,maxLon=-999;
   pts.forEach(p => { minLat=Math.min(minLat,p.c[0]); maxLat=Math.max(maxLat,p.c[0]); minLon=Math.min(minLon,p.c[1]); maxLon=Math.max(maxLon,p.c[1]); });
   const W=340, H=300, pad=26;
@@ -436,9 +955,9 @@ function render() {
           <div class="header-sub">${esc(cfg.subtitle)}</div>
         </div>
         <div class="header-metrics" onclick="toggleFuel()">
-          <div><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b> ajoaikaa</div>
-          ${hoursSinceFull()!==null?`<div style="font-size:10px;color:#7A9AB5;margin-top:-3px">ajettu ${hoursSinceFull().toFixed(1)} h ed. täydestä</div>`:""}
-          <div><b>${Math.round(consNm>0?fuel/consNm:fuel/cons*25)} nm</b> jäljellä</div>
+          <div><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b> ${t('runTime')}</div>
+          ${hoursSinceFull()!==null?`<div style="font-size:10px;color:#7A9AB5;margin-top:-3px">${t('runSinceFull', hoursSinceFull().toFixed(1))}</div>`:""}
+          <div><b>${Math.round(consNm>0?fuel/consNm:fuel/cons*25)} nm</b> ${t('remaining')}</div>
         </div>
       </div>
       <div class="header-gauge" onclick="toggleFuel()">
@@ -454,7 +973,7 @@ function render() {
       <div class="header-right">
         <img class="boat-img" src="${cfg.photo || './aquador.png'}" alt="${esc(cfg.title)}" style="cursor:pointer" onclick="openSettings()">
         <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
-        <div style="font-size:9.5px;color:#5f7d93;text-align:center;margin-top:3px">ⓘ tiedot</div>
+        <div style="font-size:9.5px;color:#5f7d93;text-align:center;margin-top:3px">${t('infoShort')}</div>
       </div>
     </div>
   </div>`;
@@ -464,44 +983,50 @@ function render() {
     html += `
     <div class="fuel-panel">
       <div style="display:flex;align-items:center;margin-bottom:12px">
-        <div style="font-size:14px;font-weight:700;color:#4A90B8">⚙️ Veneen tiedot</div>
-        <button class="btn-close" style="margin-left:auto" onclick="closeSettings()">✕ Sulje</button>
+        <div style="font-size:14px;font-weight:700;color:#4A90B8">${t('boatInfo')}</div>
+        <button class="btn-close" style="margin-left:auto" onclick="closeSettings()">✕ ${t('close')}</button>
       </div>
-      <label>Veneen nimi</label>
-      <input type="text" id="setTitle" value="${esc(cfg.title)}" placeholder="esim. Aquador 28C">
-      <label>Alaotsikko</label>
-      <input type="text" id="setSub" value="${esc(cfg.subtitle)}" placeholder="esim. Reittipäiväkirja">
-      <label>Tankin koko (L)</label>
-      <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="esim. 350">
-      <label>Veneen kuva</label>
+      <label>${t('language')}</label>
       <div class="flex-row">
-        <button class="btn-set" style="flex:1" onclick="document.getElementById('photoFile').click()">📷 Vaihda kuva</button>
-        <button class="btn-set" style="flex:1" onclick="clearPhoto()">↩︎ Oletus</button>
+        <button class="btn-set" style="flex:1;${lang==='fi'?'outline:2px solid #4A90B8':''}" onclick="setLang('fi')">🇫🇮 Suomi</button>
+        <button class="btn-set" style="flex:1;${lang==='en'?'outline:2px solid #4A90B8':''}" onclick="setLang('en')">🇬🇧 English</button>
+        <button class="btn-set" style="flex:1;${lang==='sv'?'outline:2px solid #4A90B8':''}" onclick="setLang('sv')">🇸🇪 Svenska</button>
+      </div>
+      <label>${t('boatName')}</label>
+      <input type="text" id="setTitle" value="${esc(cfg.title)}" placeholder="${t('phBoatName')}">
+      <label>${t('subtitle')}</label>
+      <input type="text" id="setSub" value="${esc(cfg.subtitle)}" placeholder="${t('phSubtitle')}">
+      <label>${t('tankSize')}</label>
+      <input type="text" inputmode="decimal" id="setTank" value="${TANK}" placeholder="${t('phTank')}">
+      <label>${t('boatPhoto')}</label>
+      <div class="flex-row">
+        <button class="btn-set" style="flex:1" onclick="document.getElementById('photoFile').click()">${t('changePhoto')}</button>
+        <button class="btn-set" style="flex:1" onclick="clearPhoto()">${t('defaultPhoto')}</button>
       </div>
       <input type="file" id="photoFile" accept="image/*" style="display:none" onchange="photoChosen(this)">
-      <div style="font-size:11px;color:#7A9AB5;margin-top:6px">${cfg.photo ? "Oma kuva käytössä (vaihtuu heti valittaessa)." : "Käytössä oletuskuva."}</div>
-      <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">💾 Tallenna</button>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:6px">${cfg.photo ? t('ownPhotoOn') : t('defaultPhotoOn')}</div>
+      <button class="btn-save" style="margin-top:14px" onclick="saveSettings()">${t('saveSettingsBtn')}</button>
       <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 12px"></div>
-      <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">💾 Varmuuskopio</div>
+      <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">${t('backup')}</div>
       <div class="flex-row">
-        <button class="btn-set" style="flex:1" onclick="exportData()">⬇️ Vie tiedot</button>
-        <button class="btn-set" style="flex:1" onclick="document.getElementById('importFile').click()">⬆️ Tuo tiedot</button>
+        <button class="btn-set" style="flex:1" onclick="exportData()">${t('exportBtn')}</button>
+        <button class="btn-set" style="flex:1" onclick="document.getElementById('importFile').click()">${t('importBtn')}</button>
       </div>
       <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importFileChosen(this)">
-      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">Vie tallentaa kaikki tiedot tiedostoon (talteen tai toiselle laitteelle). Tuo korvaa laitteen nykyiset tiedot tiedoston tiedoilla.</div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">${t('backupHelp')}</div>
 
       <div style="border-top:1px solid rgba(74,144,184,0.18);margin:16px 0 12px"></div>
-      <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">ℹ️ Tietoja, vastuuvapaus ja yksityisyys</div>
+      <div style="font-size:13px;font-weight:700;color:#4A90B8;margin-bottom:8px">${t('aboutTitle')}</div>
       <div style="font-size:11.5px;line-height:1.6;color:#9FB6C9">
-        <p><b style="color:#E8EFF5">Veneloki</b> ${esc(APP_VERSION)} · Tekijä: ${esc(APP_AUTHOR)} · ${esc(APP_CONTACT)}</p>
-        <p style="margin-top:8px"><b style="color:#E8EFF5">Vastuuvapaus.</b> Sovellus tarjotaan sellaisenaan ("as is") ilman minkäänlaista takuuta. Se voi sisältää virheitä eikä välttämättä aina toimi oikein. Polttoainemäärä, kulutus, matkat ja kustannukset ovat <b>arvioita</b>, jotka perustuvat syöttämiisi tietoihin ja asetuksiin — ne eivät ole tarkkoja mittauksia. Tekijä ei vastaa mistään suorista tai välillisistä vahingoista, menetyksistä tai seurauksista, jotka aiheutuvat sovelluksen käytöstä tai virhetoiminnasta.</p>
-        <p style="margin-top:8px"><b style="color:#E8EFF5">Turvallisuus.</b> Älä koskaan tee polttoaineen riittävyyttä tai navigointia koskevia päätöksiä pelkästään tämän sovelluksen perusteella. Pidä aina riittävä polttoainereservi, käytä ajantasaisia merikarttoja ja noudata hyvää merimiestapaa. Sovellus ei korvaa veneen mittareita, karttoja eikä omaa harkintaa.</p>
-        <p style="margin-top:8px"><b style="color:#E8EFF5">Yksityisyys.</b> Kaikki tiedot tallennetaan vain tämän laitteen selaimeen (localStorage). Mitään ei lähetetä palvelimelle eikä kerätä. Tietojen säilyminen on omalla vastuullasi — ota säännöllisesti varmuuskopio. Selaimen "tyhjennä sivuston tiedot" -toiminto poistaa kaikki tiedot pysyvästi.</p>
-        <p style="margin-top:8px"><b style="color:#E8EFF5">Lähdekoodi:</b> <a href="https://github.com/jaakkoerjanti/Veneloki" target="_blank" rel="noopener" style="color:#4A90B8;text-decoration:none">github.com/jaakkoerjanti/Veneloki</a></p>
-        <p style="margin-top:6px">Löysitkö virheen tai kehitysidean? <a href="mailto:jaakko@erjanti.fi?subject=Veneloki%20palaute" style="color:#4A90B8;text-decoration:none">Lähetä palautetta sähköpostilla</a>.</p>
+        <p><b style="color:#E8EFF5">Veneloki</b> ${esc(APP_VERSION)} · ${t('author')}: ${esc(APP_AUTHOR)} · ${esc(APP_CONTACT)}</p>
+        <p style="margin-top:8px">${t('discLiability')}</p>
+        <p style="margin-top:8px">${t('discSafety')}</p>
+        <p style="margin-top:8px">${t('discPrivacy')}</p>
+        <p style="margin-top:8px"><b style="color:#E8EFF5">${t('sourceCode')}</b> <a href="https://github.com/jaakkoerjanti/Veneloki" target="_blank" rel="noopener" style="color:#4A90B8;text-decoration:none">github.com/jaakkoerjanti/Veneloki</a></p>
+        <p style="margin-top:6px">${t('foundBug')} <a href="mailto:jaakko@erjanti.fi?subject=Veneloki%20palaute" style="color:#4A90B8;text-decoration:none">${t('sendFeedback')}</a>.</p>
       </div>
 
-      <button class="btn-cancel" onclick="closeSettings()">Peruuta</button>
+      <button class="btn-cancel" onclick="closeSettings()">${t('cancel')}</button>
     </div>`;
   }
 
@@ -514,45 +1039,48 @@ function render() {
     const pPpl = ef && ef.ppl ? ef.ppl : "";
     const pTot = ef && ef.total ? ef.total : "";
     const pFull = ef ? !!ef.full : true;
+    const pLoc = ef ? (ef.loc||"") : lastHarbor();
     html += `
     <div class="fuel-panel">
       <div style="display:flex;align-items:center;margin-bottom:12px">
-        <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ ${ef?"Muokkaa tankkausta":"Kirjaa tankkaus"}</div>
-        <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ Sulje</button>
+        <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ ${ef?t('editFueling'):t('logFueling')}</div>
+        <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ ${t('close')}</button>
       </div>
-      <label>Päivämäärä</label>
+      <label>${t('date')}</label>
       <input type="date" id="fkDate" value="${pDate}">
+      <label>${t('location')}</label>
+      <input type="text" id="fkLoc" value="${esc(pLoc)}" placeholder="${t('phLocation')}">
       <div class="grid2">
-        <div><label>Litraa</label><input type="text" inputmode="decimal" id="fkL" value="${pL}" placeholder="esim. 150" oninput="calcFuelPrice('l')"></div>
-        <div><label>Mittari (h)</label><input type="text" inputmode="decimal" id="fkMh" value="${pMh}" placeholder="esim. ${lmh.toFixed(1)}"></div>
+        <div><label>${t('liters')}</label><input type="text" inputmode="decimal" id="fkL" value="${pL}" placeholder="${t('phLiters')}" oninput="calcFuelPrice('l')"></div>
+        <div><label>${t('meterH')}</label><input type="text" inputmode="decimal" id="fkMh" value="${pMh}" placeholder="${t('eg')} ${lmh.toFixed(1)}"></div>
       </div>
       <div class="grid2">
-        <div><label>Hinta €/L</label><input type="text" inputmode="decimal" id="fkPpl" value="${pPpl}" placeholder="esim. 1.95" oninput="calcFuelPrice('ppl')"></div>
-        <div><label>Yhteensä €</label><input type="text" inputmode="decimal" id="fkTot" value="${pTot}" placeholder="esim. 292.50" oninput="calcFuelPrice('tot')"></div>
+        <div><label>${t('pricePerL')}</label><input type="text" inputmode="decimal" id="fkPpl" value="${pPpl}" placeholder="${t('phPrice')}" oninput="calcFuelPrice('ppl')"></div>
+        <div><label>${t('totalEur')}</label><input type="text" inputmode="decimal" id="fkTot" value="${pTot}" placeholder="${t('phTotal')}" oninput="calcFuelPrice('tot')"></div>
       </div>
-      <label class="checkrow"><input type="checkbox" id="fkFull" ${pFull?"checked":""} onchange="fullToggle()"><span>Tankki täyteen (${TANK} L)</span></label>
-      <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">${pFull?"Tankki asetetaan täyteen. Mittarilukema pakollinen.":"Lisätankkaus: litrat lisätään tankin nykyiseen tasoon."}</div>
-      <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">Täytä litrat ja joko €/L tai yhteensä €.</div>
-      <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 ${ef?"Tallenna muutokset":"Tallenna tankkaus"}</button>
-      <button class="btn-cancel" onclick="toggleFuel()">Peruuta</button>
+      <label class="checkrow"><input type="checkbox" id="fkFull" ${pFull?"checked":""} onchange="fullToggle()"><span>${t('fullTankCheck', TANK)}</span></label>
+      <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">${pFull?t('fullTankSet'):t('topUpHint')}</div>
+      <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">${t('fillLitersHint')}</div>
+      <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 ${ef?t('saveChanges'):t('saveFueling')}</button>
+      <button class="btn-cancel" onclick="toggleFuel()">${t('cancel')}</button>
     </div>`;
   }
 
   html += `
   <div class="tabs">
-    <button class="tab ${tab==='loki'?'active':''}" onclick="setTab('loki')">📋 Loki</button>
-    <button class="tab ${tab==='uusi'?'active':''}" onclick="setTab('uusi')">➕ Uusi</button>
-    <button class="tab ${tab==='huolto'?'active':''}" onclick="setTab('huolto')">🔧 Huolto</button>
-    <button class="tab ${tab==='tilasto'?'active':''}" onclick="setTab('tilasto')">📊 Tilastot</button>
+    <button class="tab ${tab==='loki'?'active':''}" onclick="setTab('loki')">${t('tabLog')}</button>
+    <button class="tab ${tab==='uusi'?'active':''}" onclick="setTab('uusi')">${t('tabNew')}</button>
+    <button class="tab ${tab==='huolto'?'active':''}" onclick="setTab('huolto')">${t('tabService')}</button>
+    <button class="tab ${tab==='tilasto'?'active':''}" onclick="setTab('tilasto')">${t('tabStats')}</button>
   </div>
   <div class="content">`;
 
   if(tab==="loki") {
     // Suodatin: kaikki / etapit / tankkaukset
     html += `<div class="logfilter">
-      <button class="${logFilter==='all'?'active':''}" onclick="setFilter('all')">Kaikki</button>
-      <button class="${logFilter==='legs'?'active':''}" onclick="setFilter('legs')">Etapit</button>
-      <button class="${logFilter==='fuel'?'active':''}" onclick="setFilter('fuel')">⛽ Tankkaukset</button>
+      <button class="${logFilter==='all'?'active':''}" onclick="setFilter('all')">${t('all')}</button>
+      <button class="${logFilter==='legs'?'active':''}" onclick="setFilter('legs')">${t('legs')}</button>
+      <button class="${logFilter==='fuel'?'active':''}" onclick="setFilter('fuel')">${t('fuelings')}</button>
     </div>`;
 
     // Yhdistetty aikajana: etapit + tankkaukset, järjestys käyntiajan (mittarilukeman) mukaan, uusin ensin
@@ -565,7 +1093,7 @@ function render() {
                 : items;
 
     if(shown.length===0) {
-      const msg = logFilter==="fuel" ? "Ei tankkauksia vielä" : logFilter==="legs" ? "Ei etappeja vielä" : "Ei merkintöjä vielä";
+      const msg = logFilter==="fuel" ? t('noFuelings') : logFilter==="legs" ? t('noLegs') : t('noEntries');
       html += `<div class="empty"><div class="empty-icon">⚓</div><div>${msg}</div></div>`;
     } else {
       shown.forEach(it => {
@@ -584,7 +1112,7 @@ function render() {
             <div class="leg-meta">
               <span>⏱ <b>${dur(h)}</b></span>
               <span>⛽ <b>${f} L</b></span>
-              <span>🧭 <b>${n} nm</b>${leg.nm?'':' <span style="opacity:.6">(arvio)</span>'}</span>
+              <span>🧭 <b>${n} nm</b>${leg.nm?'':` <span style="opacity:.6">(${t('estimate')})</span>`}</span>
               <span>⚙ <b>${leg.mhStart}–${leg.mhEnd}</b></span>
             </div>
             ${leg.notes?`<div class="leg-note2">${leg.notes}</div>`:''}
@@ -594,7 +1122,7 @@ function render() {
           html += `
           <div class="leg fuelcard">
             <div class="leg-head">
-              <span class="leg-route2">⛽ Tankkaus</span>
+              <span class="leg-route2">${t('fuelingCard')}</span>
               <span class="leg-d">${f.date||""}</span>
               <span class="leg-acts">
                 <button class="btn-edit" onclick="startEditFuel('${f.id}')">✏️</button>
@@ -602,7 +1130,8 @@ function render() {
               </span>
             </div>
             <div class="leg-meta">
-              <span>🛢 <b>${(f.liters||0).toFixed(1)} L</b>${f.full?' <span style="opacity:.6">(täysi)</span>':''}</span>
+              ${f.loc?`<span>📍 ${esc(f.loc)}</span>`:''}
+              <span>🛢 <b>${(f.liters||0).toFixed(1)} L</b>${f.full?` <span style="opacity:.6">(${t('full')})</span>`:''}</span>
               ${f.mh?`<span>⚙ <b>${f.mh} h</b></span>`:''}
               ${f.ppl?`<span><b>${f.ppl.toFixed(3)} €/L</b></span>`:''}
               ${f.total?`<span>💶 <b>${f.total.toFixed(2)} €</b></span>`:''}
@@ -627,34 +1156,34 @@ function render() {
 
     html += `
     <div class="card" style="padding:20px">
-      <div style="font-size:16px;font-weight:700;color:#4A90B8;margin-bottom:16px">${editId?"Muokkaa etappia":"Uusi etappi"}</div>
-      <label>Päivämäärä</label>
+      <div style="font-size:16px;font-weight:700;color:#4A90B8;margin-bottom:16px">${editId?t('editLeg'):t('newLeg')}</div>
+      <label>${t('date')}</label>
       <input type="date" id="fDate" value="${defDate}">
       <div class="grid2">
-        <div><label>Lähtösatama</label><input type="text" id="fFrom" value="${defFrom}" placeholder="Lähtösatama"></div>
-        <div><label>Määräsatama</label><input type="text" id="fTo" value="${defTo}" placeholder="Määräsatama"></div>
+        <div><label>${t('fromHarbor')}</label><input type="text" id="fFrom" value="${defFrom}" placeholder="${t('fromHarbor')}"></div>
+        <div><label>${t('toHarbor')}</label><input type="text" id="fTo" value="${defTo}" placeholder="${t('toHarbor')}"></div>
       </div>
       <div class="grid2">
-        <div><label>Mittari lähtö (h)</label><input type="text" inputmode="decimal" id="fMhS" value="${defMhS}" placeholder="${lmh.toFixed(1)}"></div>
-        <div><label>Mittari tulo (h)</label><input type="text" inputmode="decimal" id="fMhE" value="${defMhE}" placeholder="esim. 588.5"></div>
+        <div><label>${t('meterStart')}</label><input type="text" inputmode="decimal" id="fMhS" value="${defMhS}" placeholder="${lmh.toFixed(1)}"></div>
+        <div><label>${t('meterEnd')}</label><input type="text" inputmode="decimal" id="fMhE" value="${defMhE}" placeholder="${t('phMeterEnd')}"></div>
       </div>
-      <label>Kulutus — etappikohtainen (täytä toinen tai jätä tyhjäksi)</label>
+      <label>${t('consPerLeg')}</label>
       <div class="grid2">
-        <div><label style="font-size:11px;color:#7A9AB5">L/h (tunnit × kulutus)</label>
-          <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="esim. ${cons}"></div>
-        <div><label style="font-size:11px;color:#7A9AB5">L/nm (matka × kulutus)</label>
-          <input type="text" inputmode="decimal" id="fFuelMNm" value="${defFuelMNm}" placeholder="esim. ${consNm||2}"></div>
+        <div><label style="font-size:11px;color:#7A9AB5">${t('lhHint')}</label>
+          <input type="text" inputmode="decimal" id="fFuelM" value="${defFuelM}" placeholder="${t('eg')} ${cons}"></div>
+        <div><label style="font-size:11px;color:#7A9AB5">${t('lnmHint')}</label>
+          <input type="text" inputmode="decimal" id="fFuelMNm" value="${defFuelMNm}" placeholder="${t('eg')} ${consNm||2}"></div>
       </div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:4px">Prioriteetti: L/h ensin, sitten L/nm, sitten globaali oletus (${consNm>0?consNm+" L/nm":cons+" L/h"}).</div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:4px">${t('priorityNote', consNm>0?consNm+' L/nm':cons+' L/h')}</div>
       <div id="durBox" class="hidden"></div>
-      <label>Kuljettu matka (nm) — valinnainen</label>
-      <input type="text" inputmode="decimal" id="fNm" value="${defNm}" placeholder="Tyhjä = lasketaan automaattisesti">
-      <label>Muistiinpanot</label>
-      <textarea id="fNotes" rows="3" placeholder="Sää, nähtävyydet, huomiot...">${defNotes}</textarea>
+      <label>${t('distanceNm')}</label>
+      <input type="text" inputmode="decimal" id="fNm" value="${defNm}" placeholder="${t('phAutoCalc')}">
+      <label>${t('notes')}</label>
+      <textarea id="fNotes" rows="3" placeholder="${t('phNotes')}">${defNotes}</textarea>
       <div id="previewBox" class="hidden"></div>
       <div id="errMsg" class="hidden errmsg"></div>
-      <button class="btn-save" onclick="saveLeg()">💾 ${editId?"Tallenna muutokset":"Tallenna etappi"}</button>
-      <button class="btn-cancel" onclick="cancelForm()">Peruuta</button>
+      <button class="btn-save" onclick="saveLeg()">💾 ${editId?t('saveChanges'):t('saveLegBtn')}</button>
+      <button class="btn-cancel" onclick="cancelForm()">${t('cancel')}</button>
     </div>`;
   }
 
@@ -670,52 +1199,52 @@ function render() {
     const r_cpnm = rs.nm>0 && rs.cost>0 ? rs.cost/rs.nm : 0;
     const r_lpnm = rs.nm>0 && rs.L>0 ? rs.L/rs.nm : 0;
     let yrBtns = years.map(y => `<button class="${statYear===y?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('${y}')">${y}</button>`).join("");
-    yrBtns += `<button class="${statYear==='all'?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('all')">Kaikki</button>`;
+    yrBtns += `<button class="${statYear==='all'?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('all')">${t('all')}</button>`;
     html += `<div class="card" style="margin-bottom:12px">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div class="section-title" style="margin:0">Todellinen kulutus & kustannukset</div>
+        <div class="section-title" style="margin:0">${t('realConsTitle')}</div>
         ${years.length>1?`<div class="logfilter" style="margin:0;width:auto;flex-wrap:wrap">${yrBtns}</div>`:""}
       </div>`;
     if(fuelings.length===0) {
-      html += `<div style="font-size:13px;color:#7A9AB5">Lisää tankkauksia (näpäytä loki-sivun polttoainemittaria), niin näet todellisen kulutuksen ja kustannukset käyntiaikoihin ja matkaan suhteutettuna.</div>`;
+      html += `<div style="font-size:13px;color:#7A9AB5">${t('addFuelingsHint')}</div>`;
     } else {
       html += `
-      <div class="kv-row"><span class="kv-lbl">Tankattu yhteensä</span><span class="kv-val">${rs.L.toFixed(0)} L</span></div>
-      <div class="kv-row"><span class="kv-lbl">Maksettu yhteensä</span><span class="kv-val">${rs.cost>0?rs.cost.toFixed(2)+" €":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Keskihinta</span><span class="kv-val">${r_avgPpl>0?r_avgPpl.toFixed(3)+" €/L":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Käyntitunnit</span><span class="kv-val">${rs.hrs.toFixed(1)} h</span></div>
-      <div class="kv-row"><span class="kv-lbl">Matka</span><span class="kv-val">${rs.nm.toFixed(0)} nm</span></div>
-      <div class="kv-row"><span class="kv-lbl">Todellinen kulutus</span><span class="kv-val" style="color:#4A90B8">${r_cons>0?r_cons.toFixed(1)+" L/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kulutus / merimaili</span><span class="kv-val">${r_lpnm>0?r_lpnm.toFixed(2)+" L/nm":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kustannus / tunti</span><span class="kv-val">${r_cph>0?r_cph.toFixed(2)+" €/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kustannus / merimaili</span><span class="kv-val">${r_cpnm>0?r_cpnm.toFixed(2)+" €/nm":"–"}</span></div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">${statYear==='all'?'Kaikki kaudet yhteensä.':'Kausi '+statYear+'.'} Todellinen kulutus = tankatut litrat ÷ käyntitunnit. Tarkin, kun loki ja tankkaukset kattavat saman jakson.</div>`;
+      <div class="kv-row"><span class="kv-lbl">${t('fueledTotal')}</span><span class="kv-val">${rs.L.toFixed(0)} L</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('paidTotal')}</span><span class="kv-val">${rs.cost>0?rs.cost.toFixed(2)+" €":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('avgPrice')}</span><span class="kv-val">${r_avgPpl>0?r_avgPpl.toFixed(3)+" €/L":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('engineHours')}</span><span class="kv-val">${rs.hrs.toFixed(1)} h</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('distance')}</span><span class="kv-val">${rs.nm.toFixed(0)} nm</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('actualCons')}</span><span class="kv-val" style="color:#4A90B8">${r_cons>0?r_cons.toFixed(1)+" L/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('consPerNm')}</span><span class="kv-val">${r_lpnm>0?r_lpnm.toFixed(2)+" L/nm":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('costPerH')}</span><span class="kv-val">${r_cph>0?r_cph.toFixed(2)+" €/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('costPerNm')}</span><span class="kv-val">${r_cpnm>0?r_cpnm.toFixed(2)+" €/nm":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">${statYear==='all'?t('allSeasons'):t('seasonOf',statYear)} ${t('realConsExplain')}</div>`;
     }
     html += `</div>`;
     html += `
     <div class="stat-grid">
-      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⛵</div><div class="big-stat-lbl">Etappeja</div><div class="big-stat-val">${legs.length} kpl</div></div>
-      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">🧭</div><div class="big-stat-lbl">Yhteismatka</div><div class="big-stat-val">${tn.toFixed(0)} nm</div></div>
-      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⏱️</div><div class="big-stat-lbl">Moottorit.</div><div class="big-stat-val">${th.toFixed(1)} h</div></div>
-      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⚙️</div><div class="big-stat-lbl">Mittarilukema</div><div class="big-stat-val">${lm.toFixed(1)} h</div></div>
+      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⛵</div><div class="big-stat-lbl">${t('bigLegs')}</div><div class="big-stat-val">${legs.length} ${t('pcs')}</div></div>
+      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">🧭</div><div class="big-stat-lbl">${t('totalDistance')}</div><div class="big-stat-val">${tn.toFixed(0)} nm</div></div>
+      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⏱️</div><div class="big-stat-lbl">${t('engineHoursShort')}</div><div class="big-stat-val">${th.toFixed(1)} h</div></div>
+      <div class="card big-stat" style="margin-bottom:0"><div class="big-stat-icon">⚙️</div><div class="big-stat-lbl">${t('meterReading')}</div><div class="big-stat-val">${lm.toFixed(1)} h</div></div>
     </div>
     <div class="card" style="margin-top:12px;padding:20px">
-      <div class="section-title">Kulutusasetus</div>
+      <div class="section-title">${t('consSetting')}</div>
       <div class="flex-row">
         <input type="number" step="0.5" value="${cons}" onchange="updateCons(this.value)" style="width:90px;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:20px;font-weight:700;text-align:center;color-scheme:dark">
-        <span style="font-size:15px;color:#7A9AB5">L/h oletuskulutus</span>
+        <span style="font-size:15px;color:#7A9AB5">${t('lhDefault')}</span>
       </div>
       <div class="flex-row" style="margin-top:10px">
         <input type="number" step="0.1" value="${consNm||''}" onchange="updateConsNm(this.value)" placeholder="0" style="width:90px;background:rgba(255,255,255,0.07);border:1px solid rgba(74,144,184,0.35);border-radius:8px;padding:12px;color:#E8EFF5;font-size:20px;font-weight:700;text-align:center;color-scheme:dark">
-        <span style="font-size:15px;color:#7A9AB5">L/nm vaihtoehto</span>
+        <span style="font-size:15px;color:#7A9AB5">${t('lnmAlt')}</span>
       </div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Etapin kulutus lasketaan ensisijaisesti etapille annetusta L/h:sta. Jos etapille ei anneta L/h:ta ja L/nm on asetettu (> 0), käytetään matkaa × L/nm. Muuten oletus L/h.</div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">${t('consSettingNote')}</div>
     </div>
     <div class="card">
-      <div class="section-title">Keskiluvut</div>
-      <div class="kv-row"><span class="kv-lbl">Kulutus / tunti</span><span class="kv-val">${cons} L/h</span></div>
-      <div class="kv-row"><span class="kv-lbl">Tankilla käyntiaikaa</span><span class="kv-val">~${Math.round(fuel/cons)} h</span></div>
-      <div class="kv-row"><span class="kv-lbl">Tankilla matkaa</span><span class="kv-val">~${Math.round(fuel/cons*25)} nm</span></div>
+      <div class="section-title">${t('averages')}</div>
+      <div class="kv-row"><span class="kv-lbl">${t('consPerH')}</span><span class="kv-val">${cons} L/h</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('rangeHoursOnTank')}</span><span class="kv-val">~${Math.round(fuel/cons)} h</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('rangeNmOnTank')}</span><span class="kv-val">~${Math.round(fuel/cons*25)} nm</span></div>
     </div>`;
 
     // Kulutus täydeltä täydelle: vain "tankki täyteen" -tankkaukset ovat luotettavia kalibrointipisteitä.
@@ -734,26 +1263,26 @@ function render() {
     }
     html += `
     <div class="card">
-      <div class="section-title">Kulutus tankkausväleistä</div>`;
+      <div class="section-title">${t('consFromIntervals')}</div>`;
     if(fulls.length<2) {
-      html += `<div style="font-size:13px;color:#7A9AB5">Tarvitaan vähintään 2 <b>täyteen</b>-tankkausta mittarilukemineen. Kulutus lasketaan täyteen-tankkausten väliltä: tankatut litrat ÷ käyntiajan erotus.</div>`;
+      html += `<div style="font-size:13px;color:#7A9AB5">${t('needTwoFulls')}</div>`;
     } else {
       html += `
-      <div class="kv-row"><span class="kv-lbl">Viim. tankkausväli<br><span style="font-size:11px;opacity:.7">${lastBurn.toFixed(0)} L ÷ ${lastHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${lastCons>0?lastCons.toFixed(1)+" L/h":"–"}</span></div>
-      <div class="kv-row"><span class="kv-lbl">Kaikki täydet välit<br><span style="font-size:11px;opacity:.7">${allBurn.toFixed(0)} L ÷ ${allHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${allCons>0?allCons.toFixed(1)+" L/h":"–"}</span></div>
-      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">Lasketaan täydeltä täydelle (vain täyteen-tankkaukset). Tämä on tarkin todellinen kulutus.</div>`;
+      <div class="kv-row"><span class="kv-lbl">${t('lastInterval')}<br><span style="font-size:11px;opacity:.7">${lastBurn.toFixed(0)} L ÷ ${lastHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${lastCons>0?lastCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div class="kv-row"><span class="kv-lbl">${t('allFullIntervals')}<br><span style="font-size:11px;opacity:.7">${allBurn.toFixed(0)} L ÷ ${allHrs.toFixed(1)} h</span></span><span class="kv-val" style="color:#2ECC71">${allCons>0?allCons.toFixed(1)+" L/h":"–"}</span></div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:10px">${t('fullToFullNote')}</div>`;
     }
     html += `</div>`;
 
     // Tankkausloki
     if(fuelings.length>0) {
-      html += `<div class="card"><div class="section-title">Tankkausloki</div>`;
+      html += `<div class="card"><div class="section-title">${t('fuelingLog')}</div>`;
       [...fuelings].sort((a,b)=>(b.mh||0)-(a.mh||0)).forEach(f => {
         html += `
         <div class="fuelrow">
           <div style="flex:1">
             <div class="fuelrow-date">${f.date||"–"}</div>
-            <div class="fuelrow-sub">${f.mh?"⚙ "+f.mh+" h":""}${f.mh&&f.ppl?" · ":""}${f.ppl?f.ppl.toFixed(3)+" €/L":""}</div>
+            <div class="fuelrow-sub">${f.mh?"⚙ "+f.mh+" h":""}${f.mh&&f.ppl?" · ":""}${f.ppl?f.ppl.toFixed(3)+" €/L":""}${f.loc?((f.mh||f.ppl)?" · ":"")+"📍 "+esc(f.loc):""}</div>
           </div>
           <div style="text-align:right">
             <div class="fuelrow-l">${(f.liters||0).toFixed(1)} L</div>
@@ -772,15 +1301,15 @@ function render() {
     html += `
     <div class="card">
       <div style="display:flex;align-items:center;margin-bottom:12px">
-        <div class="section-title" style="margin:0">Tankkaukset & kustannukset</div>
+        <div class="section-title" style="margin:0">${t('fuelingsAndCosts')}</div>
         <div class="logfilter" style="margin:0 0 0 auto;width:auto">
-          <button class="${statPeriod==='month'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('month')">Kuukausi</button>
-          <button class="${statPeriod==='year'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('year')">Vuosi</button>
+          <button class="${statPeriod==='month'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('month')">${t('month')}</button>
+          <button class="${statPeriod==='year'?'active':''}" style="flex:none;padding:6px 12px" onclick="setStatPeriod('year')">${t('year')}</button>
         </div>
       </div>
-      <div style="font-size:12px;color:#7A9AB5;margin-bottom:4px">Tankatut litrat (L)</div>
+      <div style="font-size:12px;color:#7A9AB5;margin-bottom:4px">${t('fueledLiters')}</div>
       ${barChartSVG(litData, "#4A90B8")}
-      <div style="font-size:12px;color:#7A9AB5;margin:14px 0 4px">Kustannukset (€)</div>
+      <div style="font-size:12px;color:#7A9AB5;margin:14px 0 4px">${t('costsEur')}</div>
       ${barChartSVG(eurData, "#2ECC71")}
     </div>`;
 
@@ -788,7 +1317,7 @@ function render() {
     const harbors = harborCounts().slice(0, 10);
     if(harbors.length>0) {
       const hmax = harbors[0].count;
-      html += `<div class="card"><div class="section-title">Eniten käydyt satamat</div>`;
+      html += `<div class="card"><div class="section-title">${t('topHarbors')}</div>`;
       harbors.forEach(h => {
         const w = Math.round((h.count/hmax)*100);
         html += `
@@ -803,9 +1332,9 @@ function render() {
     // --- Kartta + reitit ---
     html += `
     <div class="card">
-      <div class="section-title">Kartta & reitit</div>
+      <div class="section-title">${t('mapRoutes')}</div>
       ${mapSVG()}
-      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">Pisteen koko kertoo käyntien määrän. Koordinaatit ovat likimääräisiä — voit tarkentaa niitä koodin GAZ-taulusta.</div>
+      <div style="font-size:11px;color:#7A9AB5;margin-top:8px">${t('mapNote')}</div>
     </div>`;
   }
 
@@ -818,38 +1347,38 @@ function render() {
       html += `
       <div class="card" style="padding:20px">
         <div style="display:flex;align-items:center;margin-bottom:12px">
-          <div style="font-size:16px;font-weight:700;color:#4A90B8">🔧 ${em?"Muokkaa huoltoa":"Uusi huolto / korjaus"}</div>
-          <button class="btn-close" style="margin-left:auto" onclick="toggleMaint()">✕ Sulje</button>
+          <div style="font-size:16px;font-weight:700;color:#4A90B8">🔧 ${em?t('editService'):t('newService')}</div>
+          <button class="btn-close" style="margin-left:auto" onclick="toggleMaint()">✕ ${t('close')}</button>
         </div>
-        <label>Päivämäärä</label>
+        <label>${t('date')}</label>
         <input type="date" id="mDate" value="${mDate}">
-        <label>Kuvaus (osat, öljyt, työ…)</label>
-        <textarea id="mDesc" rows="3" placeholder="esim.&#10;- Vaihdettu impelleri&#10;- Moottoriöljy + suodatin&#10;- Vaihteistoöljy">${em?esc(em.desc):""}</textarea>
+        <label>${t('serviceDesc')}</label>
+        <textarea id="mDesc" rows="3" placeholder="${t('phServiceDesc')}">${em?esc(em.desc):""}</textarea>
         <div class="grid2">
-          <div><label>Hinta €</label><input type="text" inputmode="decimal" id="mCost" value="${em&&em.cost?em.cost:""}" placeholder="esim. 250"></div>
-          <div><label>Tekijä</label><input type="text" id="mBy" value="${em?esc(em.by||""):""}" placeholder="esim. itse / huoltamo"></div>
+          <div><label>${t('priceEur')}</label><input type="text" inputmode="decimal" id="mCost" value="${em&&em.cost?em.cost:""}" placeholder="${t('phPrice250')}"></div>
+          <div><label>${t('doneBy')}</label><input type="text" id="mBy" value="${em?esc(em.by||""):""}" placeholder="${t('phDoneBy')}"></div>
         </div>
         <div id="mErr" class="hidden errmsg"></div>
-        <button class="btn-save" style="margin-top:12px" onclick="saveMaint()">💾 ${em?"Tallenna muutokset":"Tallenna huolto"}</button>
-        <button class="btn-cancel" onclick="toggleMaint()">Peruuta</button>
+        <button class="btn-save" style="margin-top:12px" onclick="saveMaint()">💾 ${em?t('saveChanges'):t('saveServiceBtn')}</button>
+        <button class="btn-cancel" onclick="toggleMaint()">${t('cancel')}</button>
       </div>`;
     } else {
-      html += `<button class="btn-save" style="margin:0 0 12px" onclick="toggleMaint()">➕ Lisää huolto / korjaus</button>`;
+      html += `<button class="btn-save" style="margin:0 0 12px" onclick="toggleMaint()">${t('addService')}</button>`;
     }
     // Yhteenveto
     if(maint.length>0) {
-      html += `<div class="card"><div class="kv-row"><span class="kv-lbl">Huoltoja kirjattu</span><span class="kv-val">${maint.length} kpl</span></div><div class="kv-row"><span class="kv-lbl">Kustannukset yhteensä</span><span class="kv-val" style="color:#4A90B8">${totM>0?totM.toFixed(2)+" €":"–"}</span></div></div>`;
+      html += `<div class="card"><div class="kv-row"><span class="kv-lbl">${t('servicesLogged')}</span><span class="kv-val">${maint.length} ${t('pcs')}</span></div><div class="kv-row"><span class="kv-lbl">${t('costsTotal')}</span><span class="kv-val" style="color:#4A90B8">${totM>0?totM.toFixed(2)+" €":"–"}</span></div></div>`;
     }
     // Lista
-    html += `<div class="card"><div class="section-title">Huoltohistoria &amp; korjaukset</div>`;
+    html += `<div class="card"><div class="section-title">${t('serviceHistory')}</div>`;
     if(maint.length===0) {
-      html += `<div style="font-size:13px;color:#7A9AB5">Ei huoltomerkintöjä vielä. Lisää ensimmäinen yllä olevalla painikkeella.</div>`;
+      html += `<div style="font-size:13px;color:#7A9AB5">${t('noServices')}</div>`;
     } else {
       [...maint].sort((a,b)=>itemKey(b.date)-itemKey(a.date)).forEach(m => {
         html += `
         <div class="leg">
           <div class="leg-top">
-            <div class="leg-route" style="font-size:15px">🔧 ${m.date||"Huolto"}</div>
+            <div class="leg-route" style="font-size:15px">🔧 ${m.date||t('service')}</div>
             <span class="leg-acts">
               <button class="btn-edit" onclick="startEditMaint('${m.id}')">✏️</button>
               <button class="btn-del" onclick="deleteMaint('${m.id}')">✕</button>
@@ -869,6 +1398,7 @@ function render() {
 
   html += `</div>`;
   document.getElementById("app").innerHTML = html;
+  try { document.title = (cfg.title||"Veneloki") + " — " + t("routeLog"); } catch(e) {}
 
   // Attach live preview for uusi tab
   if(tab==="uusi") {
@@ -916,17 +1446,17 @@ function updatePreview() {
     const afc = parseFloat(afterFuel)<50?"#E74C3C":"#2ECC71";
 
     durBox.className = "duration-box";
-    durBox.innerHTML = `<div class="duration-txt">⏱ ${dur(h)}</div><div class="duration-sub">${Math.round(h*60)} min käyntiaikaa</div>`;
+    durBox.innerHTML = `<div class="duration-txt">⏱ ${dur(h)}</div><div class="duration-sub">${t('minEngineTime', Math.round(h*60))}</div>`;
 
     previewBox.className = "preview-box";
     previewBox.innerHTML = `
-      <div style="font-size:12px;color:#4A90B8;margin-bottom:10px">ESIKATSELU</div>
+      <div style="font-size:12px;color:#4A90B8;margin-bottom:10px">${t('preview')}</div>
       <div class="preview-row">
         <div class="preview-item"><div class="preview-val" style="color:#E74C3C">${f} L</div><div class="preview-lbl">${rate} L/h</div></div>
-        <div class="preview-item"><div class="preview-val" style="color:#4A90B8">${nm2} nm</div><div class="preview-lbl">arvio</div></div>
-        <div class="preview-item"><div class="preview-val" style="color:#2ECC71">${dur(h)}</div><div class="preview-lbl">kesto</div></div>
+        <div class="preview-item"><div class="preview-val" style="color:#4A90B8">${nm2} nm</div><div class="preview-lbl">${t('estimate')}</div></div>
+        <div class="preview-item"><div class="preview-val" style="color:#2ECC71">${dur(h)}</div><div class="preview-lbl">${t('duration')}</div></div>
       </div>
-      <div class="preview-after">Tankki jälkeen: <span style="color:${afc};font-weight:700">${afterFuel} L</span></div>`;
+      <div class="preview-after">${t('tankAfter')} <span style="color:${afc};font-weight:700">${afterFuel} L</span></div>`;
   } else {
     if(durBox) durBox.className = "hidden";
     if(previewBox) previewBox.className = "hidden";
@@ -943,7 +1473,7 @@ function setTab(t) {
 function toggleMaint() { showMaint = !showMaint; editMaintId = null; render(); }
 function startEditMaint(id) { editMaintId = id; showMaint = true; render(); }
 function deleteMaint(id) {
-  if(!confirm("Poistetaanko tämä huoltomerkintä?")) return;
+  if(!confirm(t('confirmDelService'))) return;
   maint = maint.filter(m => m.id !== id);
   persist(); render();
 }
@@ -953,7 +1483,7 @@ function saveMaint() {
   const cost = parseNum(document.getElementById("mCost").value);
   const by = document.getElementById("mBy").value.trim();
   const err = document.getElementById("mErr");
-  if(!desc) { err.textContent = "Anna huollon kuvaus."; err.classList.remove("hidden"); return; }
+  if(!desc) { err.textContent = t('errServiceDesc'); err.classList.remove("hidden"); return; }
   if(editMaintId) {
     maint = maint.map(m => m.id===editMaintId ? {id:m.id, date:date, desc:desc, cost:cost||0, by:by} : m);
     editMaintId = null;
@@ -1003,9 +1533,9 @@ function photoChosen(input) {
         cfg.photo = canvas.toDataURL("image/jpeg", 0.82);
         persist();
         render();
-      } catch(err) { alert("Kuvan käsittely epäonnistui."); }
+      } catch(err) { alert(t('errPhotoProcess')); }
     };
-    img.onerror = function() { alert("Kuvaa ei voitu lukea."); };
+    img.onerror = function() { alert(t('errPhotoRead')); };
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
@@ -1033,10 +1563,10 @@ function importFileChosen(input) {
     try {
       const data = JSON.parse(e.target.result);
       if(!data || (!Array.isArray(data.legs) && !Array.isArray(data.fuelings))) {
-        alert("Tämä tiedosto ei näytä olevan Veneloki-varmuuskopio.");
+        alert(t('errNotBackup'));
         input.value = ""; return;
       }
-      if(!confirm("Tuonti korvaa laitteen nykyiset tiedot tiedoston tiedoilla. Jatketaanko?")) {
+      if(!confirm(t('confirmImport'))) {
         input.value = ""; return;
       }
       if(Array.isArray(data.legs)) legs = data.legs;
@@ -1049,9 +1579,9 @@ function importFileChosen(input) {
       persist();
       showSettings = false;
       render();
-      alert("Tiedot tuotu onnistuneesti.");
+      alert(t('importOk'));
     } catch(err) {
-      alert("Tuonti epäonnistui: tiedostoa ei voitu lukea.");
+      alert(t('errImport'));
     }
     input.value = "";
   };
@@ -1064,10 +1594,10 @@ function updateFuelingHint() {
   const ppl = parseNum(document.getElementById("fkPpl").value);
   const tot = parseNum(document.getElementById("fkTot").value);
   el.style.color = "#7A9AB5";
-  if(L>0 && ppl>0 && tot<=0) el.textContent = `≈ yhteensä ${(L*ppl).toFixed(2)} €`;
+  if(L>0 && ppl>0 && tot<=0) el.textContent = t('approxTotal', (L*ppl).toFixed(2));
   else if(L>0 && tot>0 && ppl<=0) el.textContent = `≈ ${(tot/L).toFixed(3)} €/L`;
   else if(L>0 && ppl>0 && tot>0) el.textContent = `${L} L × ${ppl} €/L = ${(L*ppl).toFixed(2)} €`;
-  else el.textContent = "Täytä litrat ja joko €/L tai yhteensä €.";
+  else el.textContent = t('fillLitersHint');
 }
 
 function calcFuelPrice(src) {
@@ -1089,10 +1619,10 @@ function fullToggle() {
   const hint = document.getElementById("fkFullHint");
   if(full) {
     if(!L.value) L.value = (fuel < TANK ? Math.round(TANK-fuel) : "");
-    hint.textContent = "Tankki asetetaan täyteen. Mittarilukema pakollinen.";
+    hint.textContent = t('fullTankSet');
   } else {
     if(!editFuelId) L.value = "";
-    hint.textContent = "Lisätankkaus: litrat lisätään tankin nykyiseen tasoon.";
+    hint.textContent = t('topUpHint');
   }
 }
 
@@ -1103,17 +1633,19 @@ function logFueling() {
   let ppl = parseNum(document.getElementById("fkPpl").value);
   let tot = parseNum(document.getElementById("fkTot").value);
   const full = document.getElementById("fkFull").checked;
+  const locEl = document.getElementById("fkLoc");
+  const loc = locEl ? locEl.value.trim() : "";
   const hint = document.getElementById("fkHint");
-  if(L<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent="❌ Anna tankatut litrat."; } return; }
-  if(full && mh<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent="❌ Täysi tankki vaatii mittarilukeman."; } return; }
+  if(L<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent=t('errEnterLiters'); } return; }
+  if(full && mh<=0) { if(hint){ hint.style.color="#E74C3C"; hint.textContent=t('errFullNeedsMeter'); } return; }
   if(mh<=0) mh = latestMh();
   if(tot<=0 && ppl>0) tot = L*ppl;
   if(ppl<=0 && tot>0) ppl = tot/L;
   if(editFuelId) {
-    fuelings = fuelings.map(f => f.id===editFuelId ? {id:f.id, date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0, full:full} : f);
+    fuelings = fuelings.map(f => f.id===editFuelId ? {id:f.id, date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0, full:full, loc:loc} : f);
     editFuelId = null;
   } else {
-    fuelings.push({id:"f"+Date.now(), date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0, full:full});
+    fuelings.push({id:"f"+Date.now(), date:date, mh:mh||0, liters:L, ppl:ppl||0, total:tot||0, full:full, loc:loc});
     fuel = full ? TANK : Math.min(TANK, fuel+L);
   }
   persist();
@@ -1122,6 +1654,7 @@ function logFueling() {
 }
 
 function deleteFueling(id) {
+  if(!confirm(t('confirmDelFueling'))) return;
   fuelings = fuelings.filter(f=>f.id!==id);
   persist();
   render();
@@ -1162,10 +1695,10 @@ function saveLeg() {
   const fNotes = document.getElementById("fNotes").value.trim();
 
   const errors = [];
-  if(!fFrom) errors.push("lähtösatama puuttuu");
-  if(!fTo) errors.push("määräsatama puuttuu");
-  if(!fMhS.trim()) errors.push("mittari lähtö puuttuu");
-  if(!fMhE.trim()) errors.push("mittari tulo puuttuu");
+  if(!fFrom) errors.push(t('errFromMissing'));
+  if(!fTo) errors.push(t('errToMissing'));
+  if(!fMhS.trim()) errors.push(t('errMeterStartMissing'));
+  if(!fMhE.trim()) errors.push(t('errMeterEndMissing'));
 
   const errEl = document.getElementById("errMsg");
   if(errors.length>0) { errEl.className="errmsg"; errEl.textContent="❌ "+errors.join(", "); return; }
@@ -1173,7 +1706,7 @@ function saveLeg() {
   const mhS = String(fMhS).replace(",",".").trim();
   const mhE = String(fMhE).replace(",",".").trim();
   const h = parseFloat(mhE)-parseFloat(mhS);
-  if(h<=0) { errEl.className="errmsg"; errEl.textContent="❌ Tulo pitää olla suurempi kuin lähtö!"; return; }
+  if(h<=0) { errEl.className="errmsg"; errEl.textContent=t('errEndGtStart'); return; }
 
   const rate = fFuelM ? parseFloat(fFuelM) : cons;
   const used = Math.round(h*rate*10)/10;
@@ -1202,6 +1735,7 @@ function editLeg(id) {
 }
 
 function deleteLeg(id) {
+  if(!confirm(t('confirmDelLeg'))) return;
   const l = legs.find(x=>x.id===id);
   if(l) { fuel = Math.min(TANK,fuel+legF(l)); persist(); }
   legs = legs.filter(x=>x.id!==id);
