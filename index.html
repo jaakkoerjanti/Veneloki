@@ -662,51 +662,20 @@ function t(k){ const d=STR[lang]||STR.fi; let v=(d&&k in d)?d[k]:STR.fi[k]; if(v
 function setLang(l){ if(!STR[l]) return; lang=l; try{localStorage.setItem("vl5-lang",l);}catch(e){} try{document.documentElement.lang=l;}catch(e){} render(); }
 function initLang(){ let s=null; try{s=localStorage.getItem("vl5-lang");}catch(e){} if(s&&STR[s]){ lang=s; } else { const n=(navigator.language||"fi").toLowerCase(); lang=n.indexOf("sv")===0?"sv":n.indexOf("en")===0?"en":"fi"; } try{document.documentElement.lang=lang;}catch(e){} }
 
+// Esimerkkidata uudelle käyttäjälle (poista nämä omalla poistonapilla ja kirjaa omat).
+// Example data for a new user (delete with the delete button and log your own).
 const HIST = [
-  {id:"h1",date:"2025-01-01",from:"Jurmo",to:"Korpoström",mhStart:"534.1",mhEnd:"535.9",nm:"",notes:"Tankattu 132L ennen lähtöä",fuelManual:""},
-  {id:"h2",date:"2025-01-01",from:"Korpoström",to:"?",mhStart:"535.9",mhEnd:"537.6",nm:"",notes:"",fuelManual:""},
-  {id:"h3",date:"2025-01-01",from:"?",to:"Merimasku",mhStart:"537.6",mhEnd:"539.5",nm:"",notes:"Tankattu 123L, kulutus 25L/h",fuelManual:""},
-  {id:"h4",date:"2025-01-01",from:"Naantali",to:"?",mhStart:"539.6",mhEnd:"542.9",nm:"",notes:"Lähtö 13:00. Tankkaus 38L",fuelManual:""},
-  {id:"h5",date:"2025-01-01",from:"?",to:"Isokari",mhStart:"542.9",mhEnd:"545.6",nm:"",notes:"",fuelManual:""},
-  {id:"h6",date:"2025-01-01",from:"Isokari",to:"Uusikaupunki",mhStart:"545.6",mhEnd:"546.9",nm:"",notes:"",fuelManual:""},
-  {id:"h7",date:"2025-01-01",from:"Uusikaupunki",to:"Katanpää",mhStart:"546.9",mhEnd:"547.6",nm:"",notes:"",fuelManual:""},
-  {id:"h8",date:"2025-01-01",from:"Katanpää",to:"Merimasku",mhStart:"547.6",mhEnd:"549.5",nm:"",notes:"Tankattu 154L, 6.6h, 23.3L/h",fuelManual:""},
-  {id:"h9",date:"2025-01-01",from:"Merimasku",to:"Naantali",mhStart:"549.6",mhEnd:"550.5",nm:"",notes:"",fuelManual:""},
-  {id:"h10",date:"2025-01-01",from:"Naantali",to:"Gulvivan",mhStart:"550.5",mhEnd:"551.5",nm:"",notes:"",fuelManual:""},
-  {id:"h11",date:"2025-01-01",from:"Gulvivan",to:"Mossala",mhStart:"551.5",mhEnd:"552.5",nm:"",notes:"",fuelManual:""},
-  {id:"h12",date:"2025-01-01",from:"Mossala",to:"Houtskari Näsby",mhStart:"552.5",mhEnd:"553.5",nm:"",notes:"",fuelManual:""},
-  {id:"h13",date:"2025-01-01",from:"Houtskari Näsby",to:"Merimasku",mhStart:"553.5",mhEnd:"554.5",nm:"",notes:"",fuelManual:""},
-  {id:"h14",date:"2025-01-01",from:"Merimasku",to:"Naantali",mhStart:"554.5",mhEnd:"555.6",nm:"",notes:"Tankkaus 146L, 6h, 24L/h",fuelManual:""},
-  {id:"h15",date:"2025-01-01",from:"Naantali",to:"Damskär",mhStart:"558.8",mhEnd:"561.0",nm:"",notes:"",fuelManual:""},
-  {id:"h16",date:"2025-01-01",from:"Damskär",to:"Lappo",mhStart:"561.0",mhEnd:"561.5",nm:"",notes:"Tankattu 113L, 6.2h, 18.2L/h",fuelManual:""},
-  {id:"h17",date:"2025-01-01",from:"Lappo",to:"Glada Lax Kumlinge",mhStart:"561.5",mhEnd:"562.5",nm:"",notes:"",fuelManual:""},
-  {id:"h18",date:"2025-01-01",from:"Glada Lax Kumlinge",to:"Sottunga",mhStart:"562.5",mhEnd:"563.5",nm:"",notes:"",fuelManual:""},
-  {id:"h19",date:"2025-01-01",from:"Sottunga",to:"Kökar Brudhel",mhStart:"563.5",mhEnd:"564.9",nm:"",notes:"",fuelManual:""},
-  {id:"h20",date:"2025-01-01",from:"Kökar",to:"Naantali",mhStart:"565.1",mhEnd:"568.1",nm:"",notes:"",fuelManual:""},
-  {id:"h21",date:"2025-01-01",from:"Naantali",to:"Pensar",mhStart:"568.1",mhEnd:"569.3",nm:"",notes:"",fuelManual:""},
-  {id:"h22",date:"2025-01-01",from:"Pensar",to:"Naantali",mhStart:"569.3",mhEnd:"570.9",nm:"",notes:"",fuelManual:""},
-  {id:"h23",date:"2025-01-01",from:"Naantali",to:"Naantali",mhStart:"570.9",mhEnd:"572.2",nm:"",notes:"",fuelManual:""},
-  {id:"h24",date:"2025-01-01",from:"Naantali",to:"Merimasku",mhStart:"572.2",mhEnd:"572.6",nm:"",notes:"",fuelManual:""},
-  {id:"h25",date:"2025-05-13",from:"Merimasku",to:"Saarimökki",mhStart:"572.7",mhEnd:"573.7",nm:"",notes:"Tankattu 203.42L (500€)",fuelManual:""},
-  {id:"h26",date:"2025-05-13",from:"Saarimökki",to:"Naantali",mhStart:"573.7",mhEnd:"574.4",nm:"",notes:"",fuelManual:""},
-  {id:"h27",date:"2025-05-13",from:"Naantali",to:"Pensar",mhStart:"574.4",mhEnd:"576.0",nm:"",notes:"",fuelManual:""},
-  {id:"h28",date:"2025-05-13",from:"Pensar",to:"Vepsä",mhStart:"576.0",mhEnd:"578.2",nm:"",notes:"8kn hidas ajo",fuelManual:""},
-  {id:"h29",date:"2025-05-13",from:"Vepsä",to:"Naantali",mhStart:"578.2",mhEnd:"578.8",nm:"",notes:"",fuelManual:""},
-  {id:"h30",date:"2025-05-13",from:"Naantali",to:"Sattmark",mhStart:"578.8",mhEnd:"580.0",nm:"",notes:"",fuelManual:""},
-  {id:"h31",date:"2025-05-13",from:"Sattmark",to:"Ruissalo",mhStart:"580.0",mhEnd:"581.5",nm:"",notes:"",fuelManual:""},
-  {id:"h32",date:"2025-05-13",from:"Ruissalo",to:"Naantali",mhStart:"581.5",mhEnd:"582.5",nm:"",notes:"",fuelManual:""},
-  {id:"h33",date:"2026-06-14",from:"Naantali",to:"Nauvo",mhStart:"584.0",mhEnd:"586.2",nm:"",notes:"Hidasta ajoa",fuelManual:""},
+  {id:"e1",date:"2025-06-07",from:"Naantali",to:"Nauvo",mhStart:"10.0",mhEnd:"12.4",nm:"22",notes:"",fuelManual:""},
+  {id:"e2",date:"2025-06-08",from:"Nauvo",to:"Seili",mhStart:"12.4",mhEnd:"13.1",nm:"6",notes:"",fuelManual:""},
+  {id:"e3",date:"2025-06-08",from:"Seili",to:"Naantali",mhStart:"13.1",mhEnd:"15.3",nm:"19",notes:"",fuelManual:""},
 ];
 
-// Oletustankkaukset (m/s Viola). Päivämäärät ovat suuntaa-antavia ja muokattavissa appissa.
+// Esimerkkitankkaukset: täysi ennen, lisätankkaus matkalla, täysi jälkeen.
+// Example fuelings: full before, top-up during, full after.
 const HIST_FUEL = [
-  {id:"hf1",date:"2024-07-15",mh:534.1,liters:132,ppl:0,total:0,full:true},
-  {id:"hf2",date:"2024-08-10",mh:549.5,liters:154,ppl:0,total:0,full:true},
-  {id:"hf3",date:"2024-08-25",mh:555.6,liters:146,ppl:0,total:0,full:true},
-  {id:"hf4",date:"2025-05-20",mh:561.8,liters:113,ppl:0,total:0,full:true},
-  {id:"hf5",date:"2025-06-15",mh:572.7,liters:203.42,ppl:2.458,total:500,full:false},
-  {id:"hf6",date:"2025-07-20",mh:586.2,liters:124,ppl:0,total:0,full:false},
-  {id:"hf7",date:"2025-08-10",mh:588.7,liters:152.82,ppl:0,total:0,full:true},
+  {id:"ef1",date:"2025-06-07",mh:10.0,liters:150,ppl:1.95,total:292.50,full:true,loc:"Naantali"},
+  {id:"ef2",date:"2025-06-08",mh:13.1,liters:45,ppl:1.98,total:89.10,full:false,loc:"Nauvo"},
+  {id:"ef3",date:"2025-06-09",mh:15.3,liters:130,ppl:1.95,total:253.50,full:true,loc:"Naantali"},
 ];
 
 // State
