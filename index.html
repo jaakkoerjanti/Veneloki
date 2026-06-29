@@ -927,21 +927,21 @@ function periodLabel(key) {
 }
 function barChartSVG(data, color) {
   if(!data.length) return '<div style="font-size:13px;color:#7A9AB5">'+t('noData')+'</div>';
-  const n=data.length, bw=26, gap=12, padL=6, padR=6, padT=18, padB=22, H=120;
-  const cw = padL+padR + n*bw + (n-1)*gap;
-  const max = Math.max(...data.map(d=>d.value), 1);
-  const chartH = H - padT - padB;
-  let s = "";
-  data.forEach((d,i) => {
-    const x = padL + i*(bw+gap);
-    const h = (d.value/max)*chartH;
-    const y = padT + (chartH - h);
-    const lbl = d.value>=100 ? Math.round(d.value) : Math.round(d.value*10)/10;
-    s += `<rect x="${x}" y="${y.toFixed(1)}" width="${bw}" height="${Math.max(0,h).toFixed(1)}" rx="4" fill="${color}"/>`;
-    s += `<text x="${(x+bw/2).toFixed(1)}" y="${(y-4).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E8EFF5">${lbl}</text>`;
-    s += `<text x="${(x+bw/2).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="#7A9AB5">${d.label}</text>`;
+  const n=data.length, rowH=22, barH=11, padT=3, padB=3, labelW=52, W=320;
+  const Ht=padT+padB+n*rowH;
+  const max=Math.max(...data.map(d=>d.value),1);
+  const barX=labelW+4, barMax=W-barX-44;
+  let s="";
+  data.forEach((d,i)=>{
+    const cy=padT+i*rowH+rowH/2;
+    const w=Math.max(2,(d.value/max)*barMax);
+    const lbl=d.value>=100?Math.round(d.value):Math.round(d.value*10)/10;
+    s+=`<text x="0" y="${(cy+3.5).toFixed(1)}" font-size="10" fill="#7A9AB5">${esc(d.label)}</text>`;
+    s+=`<rect x="${barX}" y="${(cy-barH/2).toFixed(1)}" width="${barMax}" height="${barH}" rx="${(barH/2).toFixed(1)}" fill="rgba(255,255,255,0.06)"/>`;
+    s+=`<rect x="${barX}" y="${(cy-barH/2).toFixed(1)}" width="${w.toFixed(1)}" height="${barH}" rx="${(barH/2).toFixed(1)}" fill="${color}"/>`;
+    s+=`<text x="${(barX+w+5).toFixed(1)}" y="${(cy+3.5).toFixed(1)}" font-size="10" fill="#E8EFF5">${lbl}</text>`;
   });
-  return `<svg viewBox="0 0 ${cw} ${H}" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${Ht}" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">${s}</svg>`;
 }
 
 function harborCounts() {
@@ -962,8 +962,9 @@ const GAZ = {
   "Nauvo":[60.193,21.905], "Korpoström":[60.103,21.585], "Houtskari Näsby":[60.230,21.365],
   "Mossala":[60.275,21.270], "Jurmo":[59.823,21.585], "Isokari":[60.717,21.027],
   "Uusikaupunki":[60.800,21.410], "Katanpää":[60.520,21.290], "Merimasku":[60.553,21.852],
-  "Pensar":[60.300,22.060], "Vepsä":[60.335,22.100], "Sattmark":[60.265,22.110],
-  "Lappo":[60.345,21.040], "Kumlinge":[60.262,20.780], "Sottunga":[60.130,20.670], "Kökar":[59.920,20.900]
+  "Seili":[60.235,21.960], "Själö":[60.235,21.960], "Pensar":[60.300,22.060], "Vepsä":[60.335,22.100], "Sattmark":[60.265,22.110],
+  "Lappo":[60.345,21.040], "Kumlinge":[60.262,20.780], "Sottunga":[60.130,20.670], "Kökar":[59.920,20.900],
+  "Maarianhamina":[60.097,19.934], "Mariehamn":[60.097,19.934], "Degerby":[60.032,20.385], "Föglö":[60.032,20.385], "Rödhamn":[59.985,20.058]
 };
 function coordLookup(name) {
   const nm = (name||"").trim();
@@ -973,36 +974,54 @@ function coordLookup(name) {
   return null;
 }
 function mapSVG() {
-  // Kerää tunnetut satamat ja reitit
   const counts = {};
   harborCounts().forEach(h => { const c=coordLookup(h.name); if(c) counts[h.name]=(counts[h.name]||0)+h.count; });
   const pts = Object.keys(counts).map(name => ({ name, c:coordLookup(name), n:counts[name] }));
-  if(pts.length<2) return '<div style="font-size:13px;color:#7A9AB5">'+t('notEnoughPlaces')+'</div>';
-  let minLat=99,maxLat=-99,minLon=999,maxLon=-999;
-  pts.forEach(p => { minLat=Math.min(minLat,p.c[0]); maxLat=Math.max(maxLat,p.c[0]); minLon=Math.min(minLon,p.c[1]); maxLon=Math.max(maxLon,p.c[1]); });
-  const W=340, H=300, pad=26;
-  const midLat=(minLat+maxLat)/2, kx=Math.cos(midLat*Math.PI/180);
-  const lonSpan=Math.max((maxLon-minLon)*kx, 0.001), latSpan=Math.max(maxLat-minLat, 0.001);
+  if(!pts.length) return '<div style="font-size:13px;color:#7A9AB5">'+t('notEnoughPlaces')+'</div>';
+  // Kiintea alueen rajaus (SW-saaristo) jotta taustahahmotelma pysyy paikallaan
+  let latN=60.88, latS=59.74, lonW=19.78, lonE=22.50;
+  pts.forEach(p=>{ latN=Math.max(latN,p.c[0]+0.05); latS=Math.min(latS,p.c[0]-0.05); lonW=Math.min(lonW,p.c[1]-0.05); lonE=Math.max(lonE,p.c[1]+0.05); });
+  const W=340, H=300, pad=12;
+  const midLat=(latN+latS)/2, kx=Math.cos(midLat*Math.PI/180);
+  const lonSpan=(lonE-lonW)*kx, latSpan=(latN-latS);
   const sc=Math.min((W-2*pad)/lonSpan, (H-2*pad)/latSpan);
   const offX=(W-lonSpan*sc)/2, offY=(H-latSpan*sc)/2;
-  const proj = (lat,lon) => [ offX+((lon-minLon)*kx)*sc, offY+((maxLat-lat))*sc ];
+  const proj=(lat,lon)=>[ offX+((lon-lonW)*kx)*sc, offY+((latN-lat))*sc ];
+  const ppath=(poly)=> poly.map((q,k)=>{const[x,y]=proj(q[0],q[1]);return (k?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);}).join(" ")+" Z";
+  // Karkeat maa-alueet (likimaarainen hahmotelma, EI merikartta)
+  const LAND=[
+    [[60.46,20.40],[60.43,19.82],[60.17,19.64],[59.97,19.86],[60.03,20.28],[60.27,20.44]],
+    [[60.88,22.50],[60.88,21.95],[60.66,21.96],[60.56,22.05],[60.49,21.99],[60.46,22.12],[60.43,22.50]],
+    [[60.88,21.66],[60.88,21.02],[60.62,21.04],[60.55,21.34],[60.70,21.62]],
+    [[60.37,22.18],[60.32,21.62],[60.12,21.56],[60.05,21.86],[60.14,22.12],[60.27,22.20]],
+    [[60.31,21.42],[60.23,21.27],[60.16,21.40],[60.22,21.55]],
+    [[60.46,21.30],[60.41,21.08],[60.33,21.22],[60.39,21.40]],
+    [[60.31,20.86],[60.24,20.71],[60.17,20.86],[60.25,20.98]],
+    [[60.15,20.70],[60.10,20.60],[60.05,20.74],[60.12,20.82]],
+    [[59.96,20.98],[59.90,20.84],[59.85,20.99],[59.92,21.08]],
+    [[60.20,21.95],[60.16,21.86],[60.12,21.98],[60.18,22.04]],
+    [[59.85,21.62],[59.82,21.55],[59.80,21.66]]
+  ];
+  let land = LAND.map(poly=>`<path d="${ppath(poly)}" fill="#1d3b30" stroke="#33614f" stroke-width="1" opacity="0.6"/>`).join("");
+  // ruudukko (lon/lat) chart-tunnelma
+  let grid="";
+  for(let lon=21; lon<=22; lon+=1){ const[x,y0]=proj(latN,lon),[x2,y1]=proj(latS,lon); grid+=`<line x1="${x.toFixed(1)}" y1="${y0.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y1.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`; }
+  for(let lat=60; lat>=60; lat-=0.5){ const[x0,y]=proj(lat,lonW),[x1,y2]=proj(lat,lonE); grid+=`<line x1="${x0.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`; }
+  for(let lat=60.5; lat>=59.75; lat-=0.5){ const[x0,y]=proj(lat,lonW),[x1,y2]=proj(lat,lonE); grid+=`<line x1="${x0.toFixed(1)}" y1="${y.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>`; }
   // reitit
   let lines="";
-  legs.forEach(l => {
-    const a=coordLookup(l.from), b=coordLookup(l.to);
-    if(a&&b){ const [x1,y1]=proj(a[0],a[1]), [x2,y2]=proj(b[0],b[1]); lines+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#4A90B8" stroke-width="1.5" opacity="0.5"/>`; }
-  });
+  legs.forEach(l => { const a=coordLookup(l.from), b=coordLookup(l.to); if(a&&b){ const[x1,y1]=proj(a[0],a[1]),[x2,y2]=proj(b[0],b[1]); lines+=`<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#4A90B8" stroke-width="1.5" opacity="0.55"/>`; } });
   const maxN=Math.max(...pts.map(p=>p.n),1);
   let dots="", labels="";
-  pts.forEach(p => {
-    const [x,y]=proj(p.c[0],p.c[1]);
-    const r=4+(p.n/maxN)*6;
-    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#2ECC71" opacity="0.85" stroke="#0E2433" stroke-width="1.5"/>`;
-    labels+=`<text x="${x.toFixed(1)}" y="${(y-r-3).toFixed(1)}" text-anchor="middle" font-size="9" fill="#E8EFF5">${esc(p.name)}</text>`;
+  pts.forEach(p => { const[x,y]=proj(p.c[0],p.c[1]); const r=4+(p.n/maxN)*6;
+    dots+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" fill="#2ECC71" opacity="0.9" stroke="#0E2433" stroke-width="1.5"/>`;
+    let anc="middle", lx=x;
+    if(x<46){ anc="start"; lx=Math.max(3,x-r); }
+    else if(x>W-46){ anc="end"; lx=Math.min(W-3,x+r); }
+    labels+=`<text x="${lx.toFixed(1)}" y="${(y-r-3).toFixed(1)}" text-anchor="${anc}" font-size="9" fill="#E8EFF5">${esc(p.name)}</text>`;
   });
-  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;background:rgba(74,144,184,0.06);border-radius:10px">${lines}${dots}${labels}</svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;border-radius:10px"><defs><linearGradient id="wtr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14344a"/><stop offset="1" stop-color="#0b1e2d"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#wtr)"/>${grid}${land}${lines}${dots}${labels}</svg>`;
 }
-
 function render() {
   const cf = computeFuel();
   if(cf !== null) fuel = cf;
@@ -1170,13 +1189,12 @@ function render() {
         if(it.t==="leg") {
           const leg=it.d, h=legH(leg), f=legF(leg), n=legN(leg);
           html += `
-          <div class="leg">
+          <div class="leg" onclick="editLeg('${leg.id}')" style="cursor:pointer">
             <div class="leg-head">
               <span class="leg-route2">${leg.from} → ${leg.to}</span>
               <span class="leg-d">${leg.date}</span>
               <span class="leg-acts">
-                <button class="btn-edit" onclick="editLeg('${leg.id}')">✏️</button>
-                <button class="btn-del" onclick="deleteLeg('${leg.id}')">✕</button>
+                <button class="btn-del" onclick="event.stopPropagation();deleteLeg('${leg.id}')">✕</button>
               </span>
             </div>
             <div class="leg-meta">
@@ -1190,13 +1208,12 @@ function render() {
         } else {
           const f=it.d;
           html += `
-          <div class="leg fuelcard">
+          <div class="leg fuelcard" onclick="startEditFuel('${f.id}')" style="cursor:pointer">
             <div class="leg-head">
               <span class="leg-route2">${t('fuelingCard')}</span>
               <span class="leg-d">${f.date||""}</span>
               <span class="leg-acts">
-                <button class="btn-edit" onclick="startEditFuel('${f.id}')">✏️</button>
-                <button class="btn-del" onclick="deleteFueling('${f.id}')">✕</button>
+                <button class="btn-del" onclick="event.stopPropagation();deleteFueling('${f.id}')">✕</button>
               </span>
             </div>
             <div class="leg-meta">
@@ -1843,6 +1860,9 @@ function saveLeg() {
 function editLeg(id) {
   editId = id;
   tab = "uusi";
+  newMode = "leg";
+  editFuelId = null;
+  showSettings = false;
   render();
 }
 
