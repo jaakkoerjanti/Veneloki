@@ -50,9 +50,10 @@ input, textarea, button, select { font-family: inherit; font-size: 16px; }
 .gauge-ef { fill: #7A9AB5; font-size: 11px; font-weight: 700; text-anchor: middle; }
 .gauge-center { position: absolute; inset: 0 0 12px 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
 .gauge-l { font-size: 19px; font-weight: 800; line-height: 1; }
-.logfilter { display: flex; gap: 6px; margin-bottom: 12px; }
-.logfilter button { flex: 1; padding: 8px; border-radius: 9px; border: 1px solid rgba(74,144,184,0.25); background: rgba(255,255,255,0.03); color: #7A9AB5; font-size: 13px; font-weight: 700; cursor: pointer; }
-.logfilter button.active { background: rgba(74,144,184,0.18); border-color: rgba(74,144,184,0.5); color: #4A90B8; }
+.logfilter { display: flex; margin-bottom: 12px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(74,144,184,0.15); overflow: hidden; }
+.logfilter button { flex: 1; padding: 12px 3px; border: none; border-right: 1px solid rgba(74,144,184,0.15); background: transparent; color: #7A9AB5; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+.logfilter button:last-child { border-right: none; }
+.logfilter button.active { background: rgba(74,144,184,0.25); color: #4A90B8; }
 .checkrow { display: flex; align-items: center; gap: 10px; margin: 16px 0 0; cursor: pointer; font-size: 14px; font-weight: 700; letter-spacing: normal; text-transform: none; color: #E8EFF5; }
 .checkrow input { width: 20px; height: 20px; accent-color: #2ECC71; flex-shrink: 0; }
 .gauge-u { font-size: 9px; color: #7A9AB5; margin-top: 1px; }
@@ -157,6 +158,48 @@ input:focus, textarea:focus { border-color: #4A90B8; }
 .btn-fuel-action { width: 100%; padding: 13px; margin-bottom: 14px; background: rgba(74,144,184,0.12); border: 1px solid rgba(74,144,184,0.35); border-radius: 12px; color: #4A90B8; font-size: 15px; font-weight: 700; cursor: pointer; }
 .fuelcard { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.08); }
 .fuelcard .leg-route2 { color: #2ECC71; }
+.newseg{display:flex;gap:8px;margin-bottom:14px}
+.newseg-btn{flex:1;padding:13px 8px;border-radius:12px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#cfe0ec;font-size:14px;font-weight:700;cursor:pointer}
+.newseg-btn.on{background:#16374f;border-color:rgba(74,144,184,0.6);color:#fff}
+
+  /* ===== dashboard header ===== */
+  .dash{ background:linear-gradient(180deg, rgba(20,40,58,.55), rgba(12,26,38,.35)); border-bottom:1px solid rgba(74,144,184,0.2); position:sticky; top:0; z-index:10; backdrop-filter:blur(10px); padding:10px 12px 12px; display:flex; flex-direction:column; }
+  .dash-hd{ display:flex; align-items:center; gap:8px; }
+  .dash-name{ font-size:15px; font-weight:800; cursor:pointer; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .dash-name .he{ color:#4A90B8; font-size:11px; opacity:.7; }
+  .dash-tog{ flex:none; width:36px; height:30px; border-radius:9px; border:1px solid rgba(74,144,184,0.3); background:rgba(255,255,255,0.05); color:#9fc0d8; font-size:17px; cursor:pointer; line-height:1; }
+  .dash-main{ display:flex; gap:10px; margin-top:10px; align-items:stretch; }
+  .batt-wrap{ flex:none; width:72px; display:flex; flex-direction:column; align-items:center; }
+  .batt-cap{ width:24px; height:6px; border-radius:4px 4px 0 0; background:#6f8da3; }
+  .batt-shell{ position:relative; width:58px; flex:1; min-height:60px; border:3px solid #6f8da3; border-radius:12px; overflow:hidden; background:rgba(255,255,255,0.03); display:flex; }
+  .batt-fill{ align-self:flex-end; width:100%; border-radius:0 0 8px 8px; transition:height .3s ease; }
+  .batt-pct{ font-size:24px; font-weight:800; margin-top:7px; line-height:1; }
+  .batt-pct span{ font-size:13px; opacity:.8; }
+  .tiles{ flex:1; min-width:0; display:grid; grid-template-columns:1fr 1fr; gap:7px; align-content:start; }
+  .tile{ background:rgba(255,255,255,0.035); border:1px solid rgba(74,144,184,0.15); border-radius:11px; padding:9px 10px; min-width:0; }
+  .tile-wide{ grid-column:span 2; display:flex; align-items:center; gap:11px; }
+  .ti-ic{ font-size:15px; line-height:1; margin-bottom:5px; }
+  .tile-wide .ti-ic{ margin-bottom:0; font-size:19px; }
+  .ti-lab{ font-size:9.5px; letter-spacing:.4px; color:#8aa6bb; font-weight:700; text-transform:uppercase; line-height:1.25; }
+  .ti-val{ font-size:21px; font-weight:800; margin-top:2px; line-height:1.05; }
+  .ti-val u{ font-size:11px; font-weight:700; color:#4A90B8; text-decoration:none; }
+  .ti-sub{ font-size:9px; color:#5f7d93; margin-top:2px; }
+  .dash-strip{ display:flex; gap:8px; margin-top:11px; padding-top:10px; border-top:1px solid rgba(74,144,184,0.15); }
+  .sc{ flex:1; display:flex; gap:7px; align-items:center; min-width:0; }
+  .st-ic{ font-size:15px; opacity:.85; flex:none; }
+  .st-lab{ font-size:8.5px; letter-spacing:.3px; color:#8aa6bb; font-weight:700; text-transform:uppercase; }
+  .st-val{ font-size:15px; font-weight:800; } .st-val u{ font-size:10px; color:#4A90B8; text-decoration:none; font-weight:700; }
+  .st-val2{ font-size:12px; font-weight:700; color:#cfe0ec; } .st-sub{ font-size:8.5px; color:#5f7d93; }
+  .dash.collapsed{ min-height:0; padding:8px 12px; }
+  .mini{ display:flex; align-items:center; gap:7px; flex:1; cursor:pointer; font-size:13px; color:#9fc0d8; flex-wrap:wrap; }
+  .mini-batt{ width:14px; height:24px; border:2px solid #6f8da3; border-radius:4px; display:flex; overflow:hidden; flex:none; }
+  .mini-fill{ align-self:flex-end; width:100%; }
+  .mini-l{ font-size:15px; font-weight:800; } .mini-d{ font-weight:600; } .mini-sep{ opacity:.4; }
+  .ti-icS{ height:18px; margin-bottom:5px; display:flex; align-items:center; }
+  .ti-icS svg{ width:17px; height:17px; }
+  .ti-val-sm{ font-size:15px; }
+  .ti-val-sm .slash{ color:#4A90B8; font-weight:700; margin:0 1px; }
+  .st-ic svg{ display:block; }
 </style>
 </head>
 <body>
@@ -180,6 +223,17 @@ const STR = {
     tabStats: `📊 Tilastot`,
     runTime: `ajoaikaa`,
     remaining: `jäljellä`,
+    fuelNow: `Polttoaine nyt`,
+    remTime: `Jäljellä oleva aika`,
+    remDist: `Jäljellä oleva matka`,
+    basedOn: (r)=>`perustuen ${r}`,
+    runTimeTank: `Ajettu aika nykytankilla`,
+    runNmTank: `Ajetut nm tankkauksen jälkeen`,
+    runSinceFuel: `Ajettu tankkauksen jälkeen`,
+    consNow: `Kulutus nyt`,
+    consAvg: `Kulutus ka.`,
+    fullToFullShort: `täydeltä täydelle`,
+    lastFueled: `Viimeksi tankattu`,
     infoShort: `ⓘ tiedot`,
     runSinceFull: (x)=>`ajettu ${x} h ed. täydestä`,
     boatInfo: `⚙️ Veneen tiedot`,
@@ -213,6 +267,7 @@ const STR = {
     cancel: `Peruuta`,
     editFueling: `Muokkaa tankkausta`,
     logFueling: `Kirjaa tankkaus`,
+    newFueling: `Uusi tankkaus`,
     date: `Päivämäärä`,
     liters: `Litraa`,
     location: `Paikka`,
@@ -344,6 +399,17 @@ const STR = {
     tabStats: `📊 Stats`,
     runTime: `run time`,
     remaining: `remaining`,
+    fuelNow: `Fuel now`,
+    remTime: `Time remaining`,
+    remDist: `Distance remaining`,
+    basedOn: (r)=>`based on ${r}`,
+    runTimeTank: `Time on current tank`,
+    runNmTank: `NM since last fueling`,
+    runSinceFuel: `Since last fueling`,
+    consNow: `Consumption now`,
+    consAvg: `Avg consumption`,
+    fullToFullShort: `full-to-full`,
+    lastFueled: `Last fueled`,
     infoShort: `ⓘ info`,
     runSinceFull: (x)=>`run ${x} h since last full`,
     boatInfo: `⚙️ Boat details`,
@@ -377,6 +443,7 @@ const STR = {
     cancel: `Cancel`,
     editFueling: `Edit fueling`,
     logFueling: `Log fueling`,
+    newFueling: `New fueling`,
     date: `Date`,
     liters: `Liters`,
     location: `Location`,
@@ -508,6 +575,17 @@ const STR = {
     tabStats: `📊 Statistik`,
     runTime: `körtid`,
     remaining: `kvar`,
+    fuelNow: `Bränsle nu`,
+    remTime: `Återstående tid`,
+    remDist: `Återstående sträcka`,
+    basedOn: (r)=>`baserat på ${r}`,
+    runTimeTank: `Tid på nuvarande tank`,
+    runNmTank: `NM sedan tankning`,
+    runSinceFuel: `Sedan tankning`,
+    consNow: `Förbrukning nu`,
+    consAvg: `Snittförbrukning`,
+    fullToFullShort: `full-till-full`,
+    lastFueled: `Senast tankad`,
     infoShort: `ⓘ info`,
     runSinceFull: (x)=>`kört ${x} h sedan full tank`,
     boatInfo: `⚙️ Båtinfo`,
@@ -541,6 +619,7 @@ const STR = {
     cancel: `Avbryt`,
     editFueling: `Redigera tankning`,
     logFueling: `Logga tankning`,
+    newFueling: `Ny tankning`,
     date: `Datum`,
     liters: `Liter`,
     location: `Plats`,
@@ -687,11 +766,12 @@ const HIST_FUEL = [
 ];
 
 // State
-let legs = [], fuelings = [], maint = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, editMaintId = null, showFuel = false, showMaint = false, showSettings = false, logFilter = "all", statPeriod = "month", statYear = "all";
+let legs = [], fuelings = [], maint = [], fuel = 350, cons = DEF_CONS, consNm = 0, tab = "loki", editId = null, editFuelId = null, editMaintId = null, showFuel = false, showMaint = false, showSettings = false, logFilter = "all", statPeriod = "month", statYear = "all", newMode = "leg", headerCollapsed = false;
 let cfg = { title: "Aquador 28C", subtitle: "Reittipäiväkirja", tank: 350 };
 
 function load() {
   initLang();
+  try{ headerCollapsed = localStorage.getItem("vl5-hdr")==="1"; }catch(e){}
   try { const v = localStorage.getItem("vl5-legs"); if(v) legs = JSON.parse(v); else legs = JSON.parse(JSON.stringify(HIST)); } catch { legs = JSON.parse(JSON.stringify(HIST)); }
   try { const v = localStorage.getItem("vl5-fuel"); if(v) fuel = parseFloat(v); } catch {}
   try { const v = localStorage.getItem("vl5-cons"); if(v) cons = parseFloat(v); } catch {}
@@ -794,6 +874,13 @@ function hoursSinceFull() {
   const refMh = parseNum(fulls.reduce((a,b) => parseNum(b.mh)>parseNum(a.mh)?b:a, fulls[0]).mh);
   return Math.max(0, latestMh() - refMh);
 }
+function fmtHM(hours){ if(hours==null||!isFinite(hours)||hours<0) return "\u2014"; let h=Math.floor(hours); let m=Math.round((hours-h)*60); if(m===60){h+=1;m=0;} return h+":"+String(m).padStart(2,"0"); }
+function nmSinceFull(){ const fulls=fuelings.filter(f=>f.full&&parseNum(f.mh)>0); if(!fulls.length) return null; const refMh=parseNum(fulls.reduce((a,b)=>parseNum(b.mh)>parseNum(a.mh)?b:a,fulls[0]).mh); let nm=0; legs.forEach(l=>{ const e=parseNum(l.mhEnd),s=parseNum(l.mhStart); if(e>refMh){ if(s>=refMh) nm+=legN(l); else if(e>s) nm+=legN(l)*((e-refMh)/(e-s)); } }); return nm; }
+function lastFueling(){ if(!fuelings.length) return null; return [...fuelings].sort((a,b)=> ((Date.parse((a.date||"")+"T00:00:00")||0)-(Date.parse((b.date||"")+"T00:00:00")||0)) || (parseNum(a.mh)-parseNum(b.mh)) )[fuelings.length-1]; }
+function avgConsReal(){ const fulls=fuelings.filter(f=>f.full&&parseNum(f.mh)>0).sort((a,b)=>parseNum(a.mh)-parseNum(b.mh)); if(fulls.length<2) return null; const allf=fuelings.filter(f=>parseNum(f.mh)>0); const lo=parseNum(fulls[0].mh), hi=parseNum(fulls[fulls.length-1].mh); if(hi<=lo) return null; const burned=allf.filter(f=>parseNum(f.mh)>lo&&parseNum(f.mh)<=hi).reduce((s,f)=>s+(f.liters||0),0); return burned/(hi-lo); }
+function toggleHeader(){ headerCollapsed=!headerCollapsed; try{localStorage.setItem("vl5-hdr", headerCollapsed?"1":"0");}catch(e){} render(); }
+function fmtHMlong(hours){ if(hours==null||!isFinite(hours)||hours<0) return "—"; let h=Math.floor(hours); let m=Math.round((hours-h)*60); if(m===60){h+=1;m=0;} return h+"h "+String(m).padStart(2,"0")+"min"; }
+function lastLegConsLh(){ if(!legs.length) return null; const s=[...legs].sort((a,b)=> ((Date.parse((a.date||"")+"T00:00:00")||0)-(Date.parse((b.date||"")+"T00:00:00")||0)) || (parseNum(a.mhEnd)-parseNum(b.mhEnd))); const l=s[s.length-1]; const hh=legH(l); if(hh<=0) return null; return legF(l)/hh; }
 function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
 function lastHarbor() {
   if(!legs.length) return "";
@@ -923,37 +1010,75 @@ function render() {
   const fc = fuelColor(pct);
   const lmh = latestMh();
 
-  let html = `
-  <div class="header">
-    <div class="header-row">
-      <div class="header-left">
-        <div class="header-id" onclick="openSettings()">
-          <div class="header-title">${esc(cfg.title)} <span class="header-edit">✎</span></div>
-          <div class="header-sub">${esc(cfg.subtitle)}</div>
+  const remH = cons>0 ? fuel/cons : 0;
+  const remNm = Math.round(consNm>0?fuel/consNm:(cons>0?fuel/cons*25:0));
+  const runH = hoursSinceFull();
+  const runNm = nmSinceFull();
+  const avgC = avgConsReal();
+  const lf = lastFueling();
+  const basis = (consNm>0 ? consNm+" L/nm" : cons+" L/h");
+
+  let html;
+  if(headerCollapsed) {
+    html = `
+    <div class="dash collapsed">
+      <div class="dash-hd">
+        <div class="mini" onclick="toggleHeader()">
+          <div class="mini-batt"><div class="mini-fill" style="height:${Math.round(pct)}%;background:${fc}"></div></div>
+          <span class="mini-l" style="color:${fc}">${Math.round(fuel)} L</span>
+          <span class="mini-d">${Math.round(pct)} %</span>
+          <span class="mini-sep">\u00b7</span>
+          <span class="mini-d">\ud83d\udd50 ${fmtHM(remH)}</span>
+          <span class="mini-sep">\u00b7</span>
+          <span class="mini-d">\u27a4 ${remNm} nm</span>
         </div>
-        <div class="header-metrics" onclick="toggleFuel()">
-          <div><b style="color:${fc}">${(fuel/cons).toFixed(1)} h</b> ${t('runTime')}</div>
-          ${hoursSinceFull()!==null?`<div style="font-size:10px;color:#7A9AB5;margin-top:-3px">${t('runSinceFull', hoursSinceFull().toFixed(1))}</div>`:""}
-          <div><b>${Math.round(consNm>0?fuel/consNm:fuel/cons*25)} nm</b> ${t('remaining')}</div>
-        </div>
+        <button class="dash-tog" onclick="toggleHeader()">\u2304</button>
       </div>
-      <div class="header-gauge" onclick="toggleFuel()">
-        <div class="gauge">
-          ${fuelGaugeSVG(pct, fc)}
-          <div class="gauge-center">
-            <div class="gauge-l" style="color:${fc}">${Math.round(fuel)}</div>
-            <div class="gauge-u">L / ${TANK}</div>
-            <div class="gauge-pct" style="color:${fc}">${Math.round(pct)} %</div>
+    </div>`;
+  } else {
+    html = `
+    <div class="dash">
+      <div class="dash-hd">
+        <div class="dash-name" onclick="openSettings()">${esc(cfg.title)} <span class="he">\u270e</span></div>
+        <button class="dash-tog" onclick="toggleHeader()">\u2303</button>
+      </div>
+      <div class="dash-main">
+        <div class="batt-wrap">
+          <div class="batt-shell"><div class="batt-fill" style="height:${Math.round(pct)}%;background:${fc}"></div></div>
+          <div class="batt-pct" style="color:${fc}">${Math.round(pct)}<span>%</span></div>
+        </div>
+        <div class="tiles">
+          <div class="tile">
+            <div class="ti-icS"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#2ECC71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="9" height="18" rx="1.5"/><line x1="3" y1="10" x2="12" y2="10"/><path d="M12 7h3l2 2v7a1.5 1.5 0 0 0 3 0v-6"/><line x1="17" y1="6" x2="20" y2="9"/></svg></div>
+            <div class="ti-lab">${t('fuelNow')}</div>
+            <div class="ti-val">${Math.round(fuel)} <u>L</u></div>
+          </div>
+          <div class="tile">
+            <div class="ti-icS"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#4A90B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div>
+            <div class="ti-lab">${t('remTime')}</div>
+            <div class="ti-val">${fmtHM(remH)} <u>h:min</u></div>
+            <div class="ti-sub">${t('basedOn', basis)}</div>
+          </div>
+          <div class="tile">
+            <div class="ti-icS"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#34c7b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5"/><path d="M21 3 14 21l-3.5-7.5L3 10z"/></svg></div>
+            <div class="ti-lab">${t('remDist')}</div>
+            <div class="ti-val">${remNm} <u>nm</u></div>
+            <div class="ti-sub">${t('basedOn', basis)}</div>
+          </div>
+          <div class="tile">
+            <div class="ti-icS"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#E0A93B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="2.5" x2="15" y2="2.5"/><line x1="12" y1="2.5" x2="12" y2="5"/><circle cx="12" cy="13" r="8"/><path d="M12 13V9"/></svg></div>
+            <div class="ti-lab">${t('runSinceFuel')}</div>
+            <div class="ti-val ti-val-sm">${fmtHMlong(runH)} <span class="slash">/</span> ${runNm==null?"—":Math.round(runNm)+" nm"}</div>
           </div>
         </div>
       </div>
-      <div class="header-right">
-        <img class="boat-img" src="${cfg.photo || './aquador.png'}" alt="${esc(cfg.title)}" style="cursor:pointer" onclick="openSettings()">
-        <div class="mh-label">⏱ ${lmh.toFixed(1)} h</div>
-        <div style="font-size:9.5px;color:#5f7d93;text-align:center;margin-top:3px">${t('infoShort')}</div>
+      <div class="dash-strip">
+        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4.5 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-11z"/></svg></span><div><div class="st-lab">${t('consNow')}</div><div class="st-val">${(lastLegConsLh()!=null?lastLegConsLh().toFixed(1):cons)} <u>L/h</u></div></div></div>
+        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c2.2 0 3-5 5.2-5s3 5 5.2 5 3-5 5.2-5"/></svg></span><div><div class="st-lab">${t('consAvg')}</div><div class="st-val">${avgC==null?"\u2014":avgC.toFixed(1)} <u>L/h</u></div><div class="st-sub">${t('fullToFullShort')}</div></div></div>
+        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="9" height="18" rx="1.5"/><line x1="3" y1="10" x2="12" y2="10"/><path d="M12 7h3l2 2v7a1.5 1.5 0 0 0 3 0v-6"/></svg></span><div><div class="st-lab">${t('lastFueled')}</div><div class="st-val2">${lf?(lf.date||"\u2014"):"\u2014"}${lf&&lf.liters?(" \u00b7 "+Math.round(lf.liters)+" L"):""}</div></div></div>
       </div>
-    </div>
-  </div>`;
+    </div>`;
+  }
 
   // Asetuspaneeli (veneen tiedot) headerin alle
   if(showSettings) {
@@ -1009,40 +1134,7 @@ function render() {
   }
 
   // Tankkauspaneeli headerin alle
-  if(showFuel) {
-    const ef = editFuelId ? fuelings.find(f=>f.id===editFuelId) : null;
-    const pDate = ef ? (ef.date||new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
-    const pL = ef ? ef.liters : (fuel<TANK?Math.round(TANK-fuel):"");
-    const pMh = ef ? ef.mh : lmh.toFixed(1);
-    const pPpl = ef && ef.ppl ? ef.ppl : "";
-    const pTot = ef && ef.total ? ef.total : "";
-    const pFull = ef ? !!ef.full : true;
-    const pLoc = ef ? (ef.loc||"") : lastHarbor();
-    html += `
-    <div class="fuel-panel">
-      <div style="display:flex;align-items:center;margin-bottom:12px">
-        <div style="font-size:14px;font-weight:700;color:#4A90B8">⛽ ${ef?t('editFueling'):t('logFueling')}</div>
-        <button class="btn-close" style="margin-left:auto" onclick="toggleFuel()">✕ ${t('close')}</button>
-      </div>
-      <label>${t('date')}</label>
-      <input type="date" id="fkDate" value="${pDate}">
-      <label>${t('location')}</label>
-      <input type="text" id="fkLoc" value="${esc(pLoc)}" placeholder="${t('phLocation')}">
-      <div class="grid2">
-        <div><label>${t('liters')}</label><input type="text" inputmode="decimal" id="fkL" value="${pL}" placeholder="${t('phLiters')}" oninput="calcFuelPrice('l')"></div>
-        <div><label>${t('meterH')}</label><input type="text" inputmode="decimal" id="fkMh" value="${pMh}" placeholder="${t('eg')} ${lmh.toFixed(1)}"></div>
-      </div>
-      <div class="grid2">
-        <div><label>${t('pricePerL')}</label><input type="text" inputmode="decimal" id="fkPpl" value="${pPpl}" placeholder="${t('phPrice')}" oninput="calcFuelPrice('ppl')"></div>
-        <div><label>${t('totalEur')}</label><input type="text" inputmode="decimal" id="fkTot" value="${pTot}" placeholder="${t('phTotal')}" oninput="calcFuelPrice('tot')"></div>
-      </div>
-      <label class="checkrow"><input type="checkbox" id="fkFull" ${pFull?"checked":""} onchange="fullToggle()"><span>${t('fullTankCheck', TANK)}</span></label>
-      <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">${pFull?t('fullTankSet'):t('topUpHint')}</div>
-      <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">${t('fillLitersHint')}</div>
-      <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 ${ef?t('saveChanges'):t('saveFueling')}</button>
-      <button class="btn-cancel" onclick="toggleFuel()">${t('cancel')}</button>
-    </div>`;
-  }
+  // (tankkauslomake siirretty Uusi-välilehdelle: newMode==="fuel")
 
   html += `
   <div class="tabs">
@@ -1121,6 +1213,46 @@ function render() {
   }
 
   if(tab==="uusi") {
+    html += `
+    <div class="newseg">
+      <button class="newseg-btn ${newMode==='leg'?'on':''}" onclick="setNewMode('leg')">➕ ${t('newLeg')}</button>
+      <button class="newseg-btn ${newMode==='fuel'?'on':''}" onclick="setNewMode('fuel')">⛽ ${t('newFueling')}</button>
+    </div>`;
+  }
+
+  if(tab==="uusi" && newMode==="fuel") {
+    const ef = editFuelId ? fuelings.find(f=>f.id===editFuelId) : null;
+    const pDate = ef ? (ef.date||new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
+    const pL = ef ? ef.liters : (fuel<TANK?Math.round(TANK-fuel):"");
+    const pMh = ef ? ef.mh : lmh.toFixed(1);
+    const pPpl = ef && ef.ppl ? ef.ppl : "";
+    const pTot = ef && ef.total ? ef.total : "";
+    const pFull = ef ? !!ef.full : true;
+    const pLoc = ef ? (ef.loc||"") : lastHarbor();
+    html += `
+    <div class="card" style="padding:20px">
+      <div style="font-size:16px;font-weight:700;color:#4A90B8;margin-bottom:16px">⛽ ${ef?t('editFueling'):t('logFueling')}</div>
+      <label>${t('date')}</label>
+      <input type="date" id="fkDate" value="${pDate}">
+      <label>${t('location')}</label>
+      <input type="text" id="fkLoc" value="${esc(pLoc)}" placeholder="${t('phLocation')}">
+      <div class="grid2">
+        <div><label>${t('liters')}</label><input type="text" inputmode="decimal" id="fkL" value="${pL}" placeholder="${t('phLiters')}" oninput="calcFuelPrice('l')"></div>
+        <div><label>${t('meterH')}</label><input type="text" inputmode="decimal" id="fkMh" value="${pMh}" placeholder="${t('eg')} ${lmh.toFixed(1)}"></div>
+      </div>
+      <div class="grid2">
+        <div><label>${t('pricePerL')}</label><input type="text" inputmode="decimal" id="fkPpl" value="${pPpl}" placeholder="${t('phPrice')}" oninput="calcFuelPrice('ppl')"></div>
+        <div><label>${t('totalEur')}</label><input type="text" inputmode="decimal" id="fkTot" value="${pTot}" placeholder="${t('phTotal')}" oninput="calcFuelPrice('tot')"></div>
+      </div>
+      <label class="checkrow"><input type="checkbox" id="fkFull" ${pFull?"checked":""} onchange="fullToggle()"><span>${t('fullTankCheck', TANK)}</span></label>
+      <div id="fkFullHint" style="font-size:11px;color:#7A9AB5;margin-top:6px">${pFull?t('fullTankSet'):t('topUpHint')}</div>
+      <div id="fkHint" style="font-size:12px;color:#7A9AB5;margin-top:8px">${t('fillLitersHint')}</div>
+      <button class="btn-save" style="margin-top:12px" onclick="logFueling()">💾 ${ef?t('saveChanges'):t('saveFueling')}</button>
+      <button class="btn-cancel" onclick="cancelFuel()">${t('cancel')}</button>
+    </div>`;
+  }
+
+  if(tab==="uusi" && newMode==="leg") {
     const ll = editId ? legs.find(l=>l.id===editId) : null;
     const defDate = ll ? ll.date : new Date().toISOString().slice(0,10);
     const defFrom = ll ? ll.from : (lastLeg()?lastLeg().to:"");
@@ -1378,8 +1510,8 @@ function render() {
   document.getElementById("app").innerHTML = html;
   try { document.title = (cfg.title||"Veneloki") + " — " + t("routeLog"); } catch(e) {}
 
-  // Attach live preview for uusi tab
-  if(tab==="uusi") {
+  // Attach live preview for uusi tab (etappi)
+  if(tab==="uusi" && newMode==="leg") {
     ["fMhS","fMhE","fFuelM","fFuelMNm","fNm"].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.addEventListener("input", updatePreview);
@@ -1388,7 +1520,7 @@ function render() {
   }
 
   // Tankkauslomakkeen live-laskenta
-  if(showFuel) {
+  if(tab==="uusi" && newMode==="fuel") {
     ["fkL","fkPpl","fkTot"].forEach(id => {
       const el = document.getElementById(id);
       if(el) el.addEventListener("input", updateFuelingHint);
@@ -1442,7 +1574,7 @@ function updatePreview() {
 }
 
 function setTab(t) {
-  if(t==="uusi" && tab!=="uusi") editId = null;
+  if(t==="uusi" && tab!=="uusi") { editId = null; editFuelId = null; newMode = "leg"; }
   if(t!=="huolto") { showMaint = false; editMaintId = null; }
   tab = t;
   render();
@@ -1476,8 +1608,10 @@ function setFilter(f) { logFilter = f; render(); }
 
 function cancelForm() { editId = null; tab = "loki"; render(); }
 
-function toggleFuel() { showFuel = !showFuel; showSettings = false; editFuelId = null; render(); }
-function startEditFuel(id) { editFuelId = id; showFuel = true; showSettings = false; render(); }
+function toggleFuel() { tab = "uusi"; newMode = "fuel"; editFuelId = null; showSettings = false; render(); }
+function setNewMode(m) { newMode = m; editId = null; editFuelId = null; render(); }
+function cancelFuel() { editFuelId = null; newMode = "leg"; tab = "loki"; render(); }
+function startEditFuel(id) { editFuelId = id; tab = "uusi"; newMode = "fuel"; showSettings = false; render(); }
 
 function openSettings() { showSettings = true; showFuel = false; render(); }
 function closeSettings() { showSettings = false; render(); }
@@ -1627,7 +1761,7 @@ function logFueling() {
     fuel = full ? TANK : Math.min(TANK, fuel+L);
   }
   persist();
-  showFuel = false;
+  tab = "loki"; newMode = "leg";
   render();
 }
 
