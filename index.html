@@ -203,6 +203,10 @@ input:focus, textarea:focus { border-color: #4A90B8; }
   .ti-val-sm{ font-size:15px; }
   .ti-val-sm .slash{ color:#4A90B8; font-weight:700; margin:0 1px; }
   .st-ic svg{ display:block; }
+.yearsel { display: flex; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-bottom: 12px; padding-bottom: 2px; }
+.yearsel::-webkit-scrollbar { display: none; }
+.yearsel button { flex: none; padding: 6px 12px; border-radius: 8px; border: 1px solid rgba(74,144,184,0.25); background: rgba(255,255,255,0.03); color: #7A9AB5; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.yearsel button.active { background: rgba(74,144,184,0.25); border-color: rgba(74,144,184,0.5); color: #4A90B8; }
 </style>
 </head>
 <body>
@@ -786,6 +790,9 @@ function load() {
   try { const v = localStorage.getItem("vl5-maint"); if(v) maint = JSON.parse(v); } catch {}
   try { const v = localStorage.getItem("vl5-cfg"); if(v) cfg = Object.assign(cfg, JSON.parse(v)); else cfg.subtitle = t("routeLog"); } catch {}
   TANK = parseNum(cfg.tank) || 350;
+  // Oletusvuosi tilastoissa: kuluva vuosi jos silta on dataa, muuten kaikki
+  const cy = String(new Date().getFullYear());
+  statYear = statYears().includes(cy) ? cy : "all";
 }
 
 function persist() {
@@ -904,7 +911,7 @@ function statYears() {
   const set = new Set();
   fuelings.forEach(f => { if(f.date && f.date.length>=4) set.add(f.date.slice(0,4)); });
   legs.forEach(l => { if(l.date && l.date.length>=4) set.add(l.date.slice(0,4)); });
-  return [...set].sort();
+  return [...set].sort().reverse(); // uusin ensin
 }
 function realStats(yearKey) {
   const fz = yearKey==="all" ? fuelings : fuelings.filter(f => (f.date||"").slice(0,4)===yearKey);
@@ -1342,13 +1349,11 @@ function render() {
     const r_cph = rs.hrs>0 && rs.cost>0 ? rs.cost/rs.hrs : 0;
     const r_cpnm = rs.nm>0 && rs.cost>0 ? rs.cost/rs.nm : 0;
     const r_lpnm = rs.nm>0 && rs.L>0 ? rs.L/rs.nm : 0;
-    let yrBtns = years.map(y => `<button class="${statYear===y?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('${y}')">${y}</button>`).join("");
-    yrBtns += `<button class="${statYear==='all'?'active':''}" style="flex:none;padding:6px 11px" onclick="setStatYear('all')">${t('all')}</button>`;
+    let yrBtns = `<button class="${statYear==='all'?'active':''}" onclick="setStatYear('all')">${t('all')}</button>`;
+    yrBtns += years.map(y => `<button class="${statYear===y?'active':''}" onclick="setStatYear('${y}')">${y}</button>`).join("");
     html += `<div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div class="section-title" style="margin:0">${t('realConsTitle')}</div>
-        ${years.length>1?`<div class="logfilter" style="margin:0;width:auto;flex-wrap:wrap">${yrBtns}</div>`:""}
-      </div>`;
+      <div class="section-title" style="margin:0 0 ${years.length>1?'10px':'12px'}">${t('realConsTitle')}</div>
+      ${years.length>1?`<div class="yearsel">${yrBtns}</div>`:""}`;
     if(fuelings.length===0) {
       html += `<div style="font-size:13px;color:#7A9AB5">${t('addFuelingsHint')}</div>`;
     } else {

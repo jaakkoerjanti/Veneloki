@@ -2,7 +2,7 @@
 // © 2026 Jaakko Erjanti. Kaikki oikeudet pidätetään. / All rights reserved.
 // Tallentaa sovelluksen tiedostot laitteelle, jotta se toimii ilman nettiä.
 // Nosta versionumeroa aina kun päivität sovellusta, niin vanha välimuisti vaihtuu.
-const CACHE = "veneloki-v57";
+const CACHE = "veneloki-v59";
 
 const ASSETS = [
   "./",
