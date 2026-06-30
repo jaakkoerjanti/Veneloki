@@ -191,7 +191,7 @@ input:focus, textarea:focus { border-color: #4A90B8; }
   .sc{ flex:1; display:flex; gap:7px; align-items:center; min-width:0; }
   .st-ic{ font-size:15px; opacity:.85; flex:none; }
   .st-lab{ font-size:8.5px; letter-spacing:.3px; color:#8aa6bb; font-weight:700; text-transform:uppercase; }
-  .st-val{ font-size:15px; font-weight:800; } .st-val u{ font-size:10px; color:#4A90B8; text-decoration:none; font-weight:700; }
+  .st-val{ font-size:15px; font-weight:800; line-height:1.35; } .st-val u{ font-size:10px; color:#4A90B8; text-decoration:none; font-weight:700; }
   .st-val2{ font-size:12px; font-weight:700; color:#cfe0ec; } .st-sub{ font-size:8.5px; color:#5f7d93; }
   .dash.collapsed{ min-height:0; padding:8px 12px; }
   .mini{ display:flex; align-items:center; gap:7px; flex:1; cursor:pointer; font-size:13px; color:#9fc0d8; flex-wrap:wrap; }
@@ -237,7 +237,7 @@ const STR = {
     runTimeTank: `Ajettu aika nykytankilla`,
     runNmTank: `Ajetut nm tankkauksen jälkeen`,
     runSinceFuel: `Ajettu tankkauksen jälkeen`,
-    consNow: `Kulutus nyt`,
+    consNow: `Viimeisin kulutus`,
     consAvg: `Kulutus ka.`,
     fullToFullShort: `täydeltä täydelle`,
     lastFueled: `Viimeksi tankattu`,
@@ -414,7 +414,7 @@ const STR = {
     runTimeTank: `Time on current tank`,
     runNmTank: `NM since last fueling`,
     runSinceFuel: `Since last fueling`,
-    consNow: `Consumption now`,
+    consNow: `Latest consumption`,
     consAvg: `Avg consumption`,
     fullToFullShort: `full-to-full`,
     lastFueled: `Last fueled`,
@@ -591,7 +591,7 @@ const STR = {
     runTimeTank: `Tid på nuvarande tank`,
     runNmTank: `NM sedan tankning`,
     runSinceFuel: `Sedan tankning`,
-    consNow: `Förbrukning nu`,
+    consNow: `Senaste förbrukning`,
     consAvg: `Snittförbrukning`,
     fullToFullShort: `full-till-full`,
     lastFueled: `Senast tankad`,
@@ -894,6 +894,8 @@ function avgConsReal(){ const fulls=fuelings.filter(f=>f.full&&parseNum(f.mh)>0)
 function toggleHeader(){ headerCollapsed=!headerCollapsed; try{localStorage.setItem("vl5-hdr", headerCollapsed?"1":"0");}catch(e){} render(); }
 function fmtHMlong(hours){ if(hours==null||!isFinite(hours)||hours<0) return "—"; let h=Math.floor(hours); let m=Math.round((hours-h)*60); if(m===60){h+=1;m=0;} return h+"h "+String(m).padStart(2,"0")+"min"; }
 function lastLegConsLh(){ if(!legs.length) return null; const s=[...legs].sort((a,b)=> ((Date.parse((a.date||"")+"T00:00:00")||0)-(Date.parse((b.date||"")+"T00:00:00")||0)) || (parseNum(a.mhEnd)-parseNum(b.mhEnd))); const l=s[s.length-1]; const hh=legH(l); if(hh<=0) return null; return legF(l)/hh; }
+function lastLegConsNm(){ if(!legs.length) return null; const s=[...legs].sort((a,b)=> ((Date.parse((a.date||"")+"T00:00:00")||0)-(Date.parse((b.date||"")+"T00:00:00")||0)) || (parseNum(a.mhEnd)-parseNum(b.mhEnd))); const l=s[s.length-1]; const d=legN(l); if(d<=0) return null; return legF(l)/d; }
+function avgConsRealNm(){ const fulls=fuelings.filter(f=>f.full&&parseNum(f.mh)>0).sort((a,b)=>parseNum(a.mh)-parseNum(b.mh)); if(fulls.length<2) return null; const allf=fuelings.filter(f=>parseNum(f.mh)>0); const lo=parseNum(fulls[0].mh), hi=parseNum(fulls[fulls.length-1].mh); if(hi<=lo) return null; const burned=allf.filter(f=>parseNum(f.mh)>lo&&parseNum(f.mh)<=hi).reduce((s,f)=>s+(f.liters||0),0); let nm=0; legs.forEach(l=>{ const s=parseNum(l.mhStart), e=parseNum(l.mhEnd); if(s>=lo-0.001 && e<=hi+0.001) nm+=legN(l); }); if(nm<=0) return null; return burned/nm; }
 function lastLeg() { return legs.length>0?legs[legs.length-1]:null; }
 function lastHarbor() {
   if(!legs.length) return "";
@@ -1051,6 +1053,9 @@ function render() {
   const runH = hoursSinceFull();
   const runNm = nmSinceFull();
   const avgC = avgConsReal();
+  const avgCnm = avgConsRealNm();
+  const lastLh = lastLegConsLh();
+  const lastNm = lastLegConsNm();
   const lf = lastFueling();
   const basis = (consNm>0 ? consNm+" L/nm" : cons+" L/h");
 
@@ -1110,8 +1115,8 @@ function render() {
         </div>
       </div>
       <div class="dash-strip">
-        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4.5 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-11z"/></svg></span><div><div class="st-lab">${t('consNow')}</div><div class="st-val">${(lastLegConsLh()!=null?lastLegConsLh().toFixed(1):cons)} <u>L/h</u></div></div></div>
-        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c2.2 0 3-5 5.2-5s3 5 5.2 5 3-5 5.2-5"/></svg></span><div><div class="st-lab">${t('consAvg')}</div><div class="st-val">${avgC==null?"\u2014":avgC.toFixed(1)} <u>L/h</u></div><div class="st-sub">${t('fullToFullShort')}</div></div></div>
+        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3.5 4.5 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 2.5-6.5 6-11z"/></svg></span><div><div class="st-lab">${t('consNow')}</div><div class="st-val">${(lastLh!=null?lastLh.toFixed(1):cons)} <u>L/h</u></div><div class="st-val">${lastNm!=null?lastNm.toFixed(1):"—"} <u>L/nm</u></div></div></div>
+        <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15c2.2 0 3-5 5.2-5s3 5 5.2 5 3-5 5.2-5"/></svg></span><div><div class="st-lab">${t('consAvg')}</div><div class="st-val">${avgC==null?"\u2014":avgC.toFixed(1)} <u>L/h</u></div><div class="st-val">${avgCnm!=null?avgCnm.toFixed(1):"—"} <u>L/nm</u></div></div></div>
         <div class="sc"><span class="st-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#9fc0d8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="9" height="18" rx="1.5"/><line x1="3" y1="10" x2="12" y2="10"/><path d="M12 7h3l2 2v7a1.5 1.5 0 0 0 3 0v-6"/></svg></span><div><div class="st-lab">${t('lastFueled')}</div><div class="st-val2">${lf?(lf.date||"\u2014"):"\u2014"}${lf&&lf.liters?(" \u00b7 "+Math.round(lf.liters)+" L"):""}</div></div></div>
       </div>
     </div>`;
@@ -1226,6 +1231,7 @@ function render() {
               <span>⛽ <b>${f} L</b></span>
               <span>🧭 <b>${n} nm</b>${leg.nm?'':` <span style="opacity:.6">(${t('estimate')})</span>`}</span>
               <span>⚙ <b>${leg.mhStart}–${leg.mhEnd}</b></span>
+              <span>💧 <b>${(legH(leg)>0?(legF(leg)/legH(leg)).toFixed(1):"—")} L/h</b> · <b>${(legN(leg)>0?(legF(leg)/legN(leg)).toFixed(1):"—")} L/nm</b></span>
             </div>
             ${leg.notes?`<div class="leg-note2">${leg.notes}</div>`:''}
           </div>`;
